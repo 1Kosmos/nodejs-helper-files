@@ -1,0 +1,22 @@
+{
+    "name": "blockid-nodejs-helpers",
+    "private": true,
+    "version": "0.0.0",
+    "description": "a Sails application",
+    "keywords": [],
+    "dependencies": {
+      "ethers": "^5.5.1"
+    },
+    "devDependencies": {
+      "ethers": "^5.5.1",
+      "uuid": "8.3.2",
+      "node-cache": "5.1.2",
+      "node-fetch": "2.6.1"
+      },
+    "repository": {
+      "type": "git",
+      "url": "git://github.com1KBlockID/nodejs-helper-files.git"
+    },
+    "author": "manikkakar",
+    "license": ""
+  }
