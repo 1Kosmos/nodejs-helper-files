@@ -178,7 +178,6 @@ const submitAssertionResult = async(resultRequest) => {
 
 
 module.exports = {
-    getPublickey,
     fetchAttestationOptions,
     submitAttestationResult,
     fetchAssertionOptions,
