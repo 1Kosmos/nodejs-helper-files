@@ -7,180 +7,154 @@
  */
 "use strict";
 const { v4: uuidv4 } = require('uuid');
-const NodeCache = require('node-cache');
-const BIDECDSA = require('./BIDECDSA');
 const BIDSDK = require('./BIDSDK');
-const BIDUsers = require('./BIDUsers');
 const fetch = require('node-fetch');
 
-const cache = new NodeCache({ stdTTL: 10 * 60 });
-
-
-
 const fetchAttestationOptions = async (optionsRequest) => {
-    try {
-        const communityInfo = await BIDSDK.getCommunityInfo();
-        const tenant        = BIDSDK.getTenant();
-        const licenseKey = BIDSDK.getLicense();
-        const sd = await BIDSDK.getSD();
+  try {
+    const communityInfo = await BIDSDK.getCommunityInfo();
+    const licenseKey = BIDSDK.getLicense();
+    const sd = await BIDSDK.getSD();
 
-        
-        let req = {
-          ...optionsRequest,
-          dns: tenant.dns,
-          communityId: communityInfo.community.id,
-          tenantId: communityInfo.tenant.id
-        }
-    
-        let headers = {
-          'Content-Type': 'application/json',
-          'charset': 'utf-8',
-          
-          licensekey: licenseKey,
-          requestid: uuidv4()
-        }
-    
-        let api_respose = await fetch(sd.webauthn + "/attestation/options", {
-          method: 'post',
-          body: JSON.stringify(req),
-          headers: headers
-        });
-    
-        if (api_respose) {
-          api_respose = await api_respose.json();
-        }
-    
-        return api_respose;
-      } catch (error) {
-        throw error;
-      }
-    
+    let req = {
+      ...optionsRequest,
+      communityId: communityInfo.community.id,
+      tenantId: communityInfo.tenant.id
+    }
+
+    let headers = {
+      'Content-Type': 'application/json',
+      'charset': 'utf-8',
+
+      licensekey: licenseKey,
+      requestid: uuidv4()
+    }
+
+    let api_respose = await fetch(sd.webauthn + "/attestation/options", {
+      method: 'post',
+      body: JSON.stringify(req),
+      headers: headers
+    });
+
+    if (api_respose) {
+      api_respose = await api_respose.json();
+    }
+
+    return api_respose;
+  } catch (error) {
+    throw error;
+  }
 }
 
-const submitAttestationResult = async(resultRequest) => {
-    try {
-        const communityInfo = await BIDSDK.getCommunityInfo();
-        const tenant        = BIDSDK.getTenant();
-        const licenseKey = BIDSDK.getLicense();
-        const sd = await BIDSDK.getSD();
+const submitAttestationResult = async (resultRequest) => {
+  try {
+    const communityInfo = await BIDSDK.getCommunityInfo();
+    const licenseKey = BIDSDK.getLicense();
+    const sd = await BIDSDK.getSD();
 
-        let req = {
-          ...resultRequest,
-          dns: tenant.dns,
-          communityId: communityInfo.community.id,
-          tenantId: communityInfo.tenant.id
-        }
-    
-        let headers = {
-          'Content-Type': 'application/json',
-          'charset': 'utf-8',
-          licensekey: licenseKey,
-          requestid: uuidv4()
-        }
-    
-        let api_respose = await fetch(sd.webauthn + "/attestation/result", {
-          method: 'post',
-          body: JSON.stringify(req),
-          headers: headers
-        });
-    
-        if (api_respose) {
-          api_respose = await api_respose.json();
-        }
-    
-        return api_respose;
-      } catch (error) {
-        throw error;
-      }
+    let req = {
+      ...resultRequest,
+      communityId: communityInfo.community.id,
+      tenantId: communityInfo.tenant.id
+    }
+
+    let headers = {
+      'Content-Type': 'application/json',
+      'charset': 'utf-8',
+      licensekey: licenseKey,
+      requestid: uuidv4()
+    }
+
+    let api_respose = await fetch(sd.webauthn + "/attestation/result", {
+      method: 'post',
+      body: JSON.stringify(req),
+      headers: headers
+    });
+
+    if (api_respose) {
+      api_respose = await api_respose.json();
+    }
+
+    return api_respose;
+  } catch (error) {
+    throw error;
+  }
 }
 
-const fetchAssertionOptions = async(optionsRequest) => {
-    try {
-        const communityInfo = await BIDSDK.getCommunityInfo();
-        const tenant        = BIDSDK.getTenant();
-        const licenseKey = BIDSDK.getLicense();
-        const sd = await BIDSDK.getSD();
+const fetchAssertionOptions = async (optionsRequest) => {
+  try {
+    const communityInfo = await BIDSDK.getCommunityInfo();
+    const licenseKey = BIDSDK.getLicense();
+    const sd = await BIDSDK.getSD();
 
-        
-        let req = {
-          ...optionsRequest,
-          dns: tenant.dns,
-          communityId: communityInfo.community.id,
-          tenantId: communityInfo.tenant.id
-        }
-    
-        let headers = {
-          'Content-Type': 'application/json',
-          'charset': 'utf-8',
-          
-          licensekey: licenseKey,
-          requestid: uuidv4()
-        }
-    
-        let api_respose = await fetch(sd.webauthn + "/assertion/options", {
-          method: 'post',
-          body: JSON.stringify(req),
-          headers: headers
-        });
-    
-        if (api_respose) {
-          api_respose = await api_respose.json();
-        }
-    
-        return api_respose;
-      } catch (error) {
-        throw error;
-      }
-        
+    let req = {
+      ...optionsRequest,
+      communityId: communityInfo.community.id,
+      tenantId: communityInfo.tenant.id
+    }
+
+    let headers = {
+      'Content-Type': 'application/json',
+      'charset': 'utf-8',
+
+      licensekey: licenseKey,
+      requestid: uuidv4()
+    }
+
+    let api_respose = await fetch(sd.webauthn + "/assertion/options", {
+      method: 'post',
+      body: JSON.stringify(req),
+      headers: headers
+    });
+
+    if (api_respose) {
+      api_respose = await api_respose.json();
+    }
+
+    return api_respose;
+  } catch (error) {
+    throw error;
+  }
 }
 
-const submitAssertionResult = async(resultRequest) => {
-    try {
-        const communityInfo = await BIDSDK.getCommunityInfo();
-        const tenant        = BIDSDK.getTenant();
-        const keySet = BIDSDK.getKeySet();
-        const licenseKey = BIDSDK.getLicense();
-        const sd = await BIDSDK.getSD();
+const submitAssertionResult = async (resultRequest) => {
+  try {
+    const communityInfo = await BIDSDK.getCommunityInfo();
+    const licenseKey = BIDSDK.getLicense();
+    const sd = await BIDSDK.getSD();
 
-        let req = {
-          ...resultRequest,
-          dns: tenant.dns,
-          communityId: communityInfo.community.id,
-          tenantId: communityInfo.tenant.id
-        }
-    
+    let req = {
+      ...resultRequest,
+      communityId: communityInfo.community.id,
+      tenantId: communityInfo.tenant.id
+    }
 
-    
-        let headers = {
-          'Content-Type': 'application/json',
-          'charset': 'utf-8',
-          licensekey: licenseKey,
-          requestid: uuidv4()
-        }
-    
-        let api_respose = await fetch(sd.webauthn + "/assertion/result", {
-          method: 'post',
-          body: JSON.stringify(req),
-          headers: headers
-        });
-    
-        if (api_respose) {
-          api_respose = await api_respose.json();
-        }
-    
-        return api_respose;
-      } catch (error) {
-        throw error;
-      }
+    let headers = {
+      'Content-Type': 'application/json',
+      'charset': 'utf-8',
+      licensekey: licenseKey,
+      requestid: uuidv4()
+    }
 
+    let api_respose = await fetch(sd.webauthn + "/assertion/result", {
+      method: 'post',
+      body: JSON.stringify(req),
+      headers: headers
+    });
+
+    if (api_respose) {
+      api_respose = await api_respose.json();
+    }
+
+    return api_respose;
+  } catch (error) {
+    throw error;
+  }
 }
-
-
 
 module.exports = {
-    fetchAttestationOptions,
-    submitAttestationResult,
-    fetchAssertionOptions,
-    submitAssertionResult
-  }
-  
+  fetchAttestationOptions,
+  submitAttestationResult,
+  fetchAssertionOptions,
+  submitAssertionResult
+}
