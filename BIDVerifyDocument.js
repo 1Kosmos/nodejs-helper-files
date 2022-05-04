@@ -16,8 +16,6 @@ const fetch = require('node-fetch');
 
 const cache = new NodeCache({ stdTTL: 10 * 60 });
 
-const smsTemplate = "Hello Developer, Please complete the document scan for <tenantname> by going to <link>"
-
 const getDocVerifyPublicKey = async () => {
   try {
     const sd = await BIDSDK.getSD();
@@ -160,7 +158,7 @@ const sendSMS = async (communityInfo, smsTo, smsISDCode, smsTemplateB64, request
   }
 }
 
-const createDocumentSession = async (dvcID, documentType, smsTo, smsISDCode) => {
+const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode, smsTemplate) => {
   try {
     const keySet = BIDSDK.getKeySet();
     const licenseKey = BIDSDK.getLicense();
@@ -168,6 +166,13 @@ const createDocumentSession = async (dvcID, documentType, smsTo, smsISDCode) => 
     const docVerifyPublicKey = await getDocVerifyPublicKey();
     const communityInfo = await BIDSDK.getCommunityInfo();
     const tenantInfo = BIDSDK.getTenant();
+
+    if (!smsTemplate || !smsTemplate.includes("<link>")) {
+      return {
+        "error_code": 400,
+        "message": "Provided SMS template is invalid, Please Provide valid template"
+      }
+    }
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, docVerifyPublicKey);
     let requestIdUuid = uuidv4();
@@ -188,7 +193,7 @@ const createDocumentSession = async (dvcID, documentType, smsTo, smsISDCode) => 
     };
 
     const req = {
-      dvcID,
+      dvcID: dvcId,
       sessionRequest: {
         tenantDNS: tenantInfo.dns,
         communityName: communityInfo.community.name,
@@ -216,7 +221,7 @@ const createDocumentSession = async (dvcID, documentType, smsTo, smsISDCode) => 
       .toString()
       .replace(/<tenantname>/, communityInfo.tenant.name)
       .replace(/<link>/, api_response.url);
-    
+
     const smsTemplateB64 = Buffer.from(templateText).toString('base64');
 
     await sendSMS(communityInfo, smsTo, smsISDCode, smsTemplateB64, requestIdUuid);
