@@ -160,7 +160,7 @@ const sendSMS = async (communityInfo, smsTo, smsISDCode, smsTemplateB64, request
   }
 }
 
-const createDocumentSession = async (dvcID, documentType, smsTo, smsISDCode) => {
+const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode) => {
   try {
     const keySet = BIDSDK.getKeySet();
     const licenseKey = BIDSDK.getLicense();
@@ -188,7 +188,7 @@ const createDocumentSession = async (dvcID, documentType, smsTo, smsISDCode) => 
     };
 
     const req = {
-      dvcID,
+      dvcID: dvcId,
       sessionRequest: {
         tenantDNS: tenantInfo.dns,
         communityName: communityInfo.community.name,
@@ -216,7 +216,7 @@ const createDocumentSession = async (dvcID, documentType, smsTo, smsISDCode) => 
       .toString()
       .replace(/<tenantname>/, communityInfo.tenant.name)
       .replace(/<link>/, api_response.url);
-    
+
     const smsTemplateB64 = Buffer.from(templateText).toString('base64');
 
     await sendSMS(communityInfo, smsTo, smsISDCode, smsTemplateB64, requestIdUuid);
@@ -227,7 +227,78 @@ const createDocumentSession = async (dvcID, documentType, smsTo, smsISDCode) => 
   }
 }
 
+const fetchSessionResult = async (dvcId, sessionId) => {
+  try {
+    const keySet = BIDSDK.getKeySet();
+    const licenseKey = BIDSDK.getLicense();
+    const sd = await BIDSDK.getSD();
+    const docVerifyPublicKey = await getDocVerifyPublicKey();
+
+    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, docVerifyPublicKey);
+
+    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+      ts: Math.round(new Date().getTime() / 1000),
+      appid: 'fixme',
+      uuid: uuidv4()
+    }), sharedKey);
+
+    const headers = {
+      'Content-Type': 'application/json',
+      charset: 'utf-8',
+      publickey: keySet.pKey,
+      licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+      requestid: encryptedRequestId
+    };
+
+    const req = {
+      dvcID: dvcId,
+      sessionId
+    };
+
+    const encryptedData = {
+      data: BIDECDSA.encrypt(JSON.stringify(req), sharedKey)
+    };
+
+    let api_response = await fetch(sd.docuverify + "/document_share_session/result", {
+      method: 'post',
+      body: JSON.stringify(encryptedData),
+      headers: headers
+    });
+
+    if (api_response) {
+      api_response = await api_response.json();
+      if (api_response.data) {
+        let dec_data = BIDECDSA.decrypt(api_response.data, sharedKey);
+        api_response = JSON.parse(dec_data);
+      }
+    }
+
+    if (api_response.responseStatus === "INPROGRESS") {
+      return { status: 404, message: "Scan session is still in progress" }
+    }
+
+    if (api_response.responseStatus === "SUCCESS") {
+
+      let document = {
+        id: api_response.liveid_object.id,
+        type: "dl",
+        image1: api_response.dl_object.face,
+        image2: api_response.liveid_object.face,
+        purpose: "dl_verification"
+      };
+
+      api_response = await verifyDocument(dvcId, ["face_compare"], document);
+    }
+
+    return api_response;
+
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   verifyDocument,
-  createDocumentSession
+  createDocumentSession,
+  fetchSessionResult
 }
