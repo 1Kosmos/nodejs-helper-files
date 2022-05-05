@@ -16,8 +16,6 @@ const fetch = require('node-fetch');
 
 const cache = new NodeCache({ stdTTL: 10 * 60 });
 
-const smsTemplate = "Hello Developer, Please complete the document scan for <tenantname> by going to <link>"
-
 const getDocVerifyPublicKey = async () => {
   try {
     const sd = await BIDSDK.getSD();
@@ -160,7 +158,7 @@ const sendSMS = async (communityInfo, smsTo, smsISDCode, smsTemplateB64, request
   }
 }
 
-const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode) => {
+const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode, smsTemplate) => {
   try {
     const keySet = BIDSDK.getKeySet();
     const licenseKey = BIDSDK.getLicense();
@@ -168,6 +166,13 @@ const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode) => 
     const docVerifyPublicKey = await getDocVerifyPublicKey();
     const communityInfo = await BIDSDK.getCommunityInfo();
     const tenantInfo = BIDSDK.getTenant();
+
+    if (!smsTemplate || !smsTemplate.includes("<link>")) {
+      return {
+        error_code: 400,
+        message: "Provided SMS template is invalid, Please Provide valid template"
+      }
+    }
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, docVerifyPublicKey);
     let requestIdUuid = uuidv4();
@@ -208,8 +213,17 @@ const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode) => 
       headers: headers
     });
 
+    let status = api_response.status;
+
     if (api_response) {
       api_response = await api_response.json();
+    }
+
+    if (status !== 200) {
+      return {
+        error_code: api_response.code,
+        message: api_response.message
+      }
     }
 
     const templateText = smsTemplate
