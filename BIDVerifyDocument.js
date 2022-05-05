@@ -169,8 +169,8 @@ const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode, sms
 
     if (!smsTemplate || !smsTemplate.includes("<link>")) {
       return {
-        "error_code": 400,
-        "message": "Provided SMS template is invalid, Please Provide valid template"
+        error_code: 400,
+        message: "Provided SMS template is invalid, Please Provide valid template"
       }
     }
 
@@ -213,8 +213,17 @@ const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode, sms
       headers: headers
     });
 
+    let status = api_response.status;
+
     if (api_response) {
       api_response = await api_response.json();
+    }
+
+    if (status !== 200) {
+      return {
+        error_code: api_response.code,
+        message: api_response.message
+      }
     }
 
     const templateText = smsTemplate
