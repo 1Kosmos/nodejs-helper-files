@@ -98,67 +98,7 @@ const verifyDocument = async (dvcId, verifications, document) => {
   }
 }
 
-const sendSMS = async (communityInfo, smsTo, smsISDCode, smsTemplateB64, requestIdUuid) => {
-  try {
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
-
-    const {
-      community:
-      {
-        publicKey: communityPublicKey,
-        tenantid: tenantId,
-        id: communityId
-      },
-      tenant: {
-        tenanttag: tenantTag
-      }
-    } = communityInfo;
-
-    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, communityPublicKey);
-
-    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-      ts: Math.round(new Date().getTime() / 1000),
-      appid: 'fixme',
-      uuid: requestIdUuid
-    }), sharedKey);
-
-    let headers = {
-      'Content-Type': 'application/json',
-      'charset': 'utf-8',
-      'X-TenantTag': tenantTag,
-      publickey: keySet.pKey,
-      licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-      requestid: encryptedRequestId
-    };
-
-    const req = {
-      tenantId,
-      communityId,
-      smsTo,
-      smsISDCode,
-      smsTemplateB64
-    };
-
-    let api_response = await fetch(sd.adminconsole + "/api/r2/messaging/schedule", {
-      method: 'post',
-      body: JSON.stringify(req),
-      headers: headers
-    });
-
-    if (api_response) {
-      api_response = await api_response.json();
-    }
-
-    return api_response;
-
-  } catch (error) {
-    throw error;
-  }
-}
-
-const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode, smsTemplate) => {
+const createDocumentSession = async (dvcId, documentType) => {
   try {
     const keySet = BIDSDK.getKeySet();
     const licenseKey = BIDSDK.getLicense();
@@ -167,21 +107,13 @@ const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode, sms
     const communityInfo = await BIDSDK.getCommunityInfo();
     const tenantInfo = BIDSDK.getTenant();
 
-    if (!smsTemplate || !smsTemplate.includes("<link>")) {
-      return {
-        error_code: 400,
-        message: "Provided SMS template is invalid, Please Provide valid template"
-      }
-    }
-
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, docVerifyPublicKey);
-    let requestIdUuid = uuidv4();
     let userUIDAndDid = uuidv4();
 
     const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
       ts: Math.round(new Date().getTime() / 1000),
       appid: 'fixme',
-      uuid: requestIdUuid
+      uuid: uuidv4()
     }), sharedKey);
 
     const headers = {
@@ -226,14 +158,6 @@ const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode, sms
       }
     }
 
-    const templateText = smsTemplate
-      .toString()
-      .replace(/<tenantname>/, communityInfo.tenant.name)
-      .replace(/<link>/, api_response.url);
-
-    const smsTemplateB64 = Buffer.from(templateText).toString('base64');
-
-    await sendSMS(communityInfo, smsTo, smsISDCode, smsTemplateB64, requestIdUuid);
     return ({ sessionId: api_response.sessionId, sessionUrl: api_response.url });
 
   } catch (error) {
@@ -241,7 +165,7 @@ const createDocumentSession = async (dvcId, documentType, smsTo, smsISDCode, sms
   }
 }
 
-const fetchSessionResult = async (dvcId, sessionId) => {
+const pollSessionResult = async (dvcId, sessionId) => {
   try {
     const keySet = BIDSDK.getKeySet();
     const licenseKey = BIDSDK.getLicense();
@@ -279,29 +203,26 @@ const fetchSessionResult = async (dvcId, sessionId) => {
       headers: headers
     });
 
+    let status = api_response.status;
+
     if (api_response) {
       api_response = await api_response.json();
+
       if (api_response.data) {
         let dec_data = BIDECDSA.decrypt(api_response.data, sharedKey);
         api_response = JSON.parse(dec_data);
       }
     }
 
-    if (api_response.responseStatus === "INPROGRESS") {
-      return { status: 404, message: "Scan session is still in progress" }
+    if (status !== 200) {
+      return {
+        error_code: api_response.code,
+        message: api_response.message
+      }
     }
 
-    if (api_response.responseStatus === "SUCCESS") {
-
-      let document = {
-        id: api_response.liveid_object.id,
-        type: "dl",
-        image1: api_response.dl_object.face,
-        image2: api_response.liveid_object.face,
-        purpose: "dl_verification"
-      };
-
-      api_response = await verifyDocument(dvcId, ["face_compare"], document);
+    if (api_response.responseStatus === "INPROGRESS") {
+      return { error_code: 404, message: "Scan session is still in progress" }
     }
 
     return api_response;
@@ -314,5 +235,5 @@ const fetchSessionResult = async (dvcId, sessionId) => {
 module.exports = {
   verifyDocument,
   createDocumentSession,
-  fetchSessionResult
+  pollSessionResult
 }
