@@ -152,10 +152,7 @@ const createDocumentSession = async (dvcId, documentType) => {
     }
 
     if (status !== 200) {
-      return {
-        error_code: api_response.code,
-        message: api_response.message
-      }
+      return api_response;
     }
 
     return ({ sessionId: api_response.sessionId, sessionUrl: api_response.url });
@@ -203,21 +200,12 @@ const pollSessionResult = async (dvcId, sessionId) => {
       headers: headers
     });
 
-    let status = api_response.status;
-
     if (api_response) {
       api_response = await api_response.json();
 
       if (api_response.data) {
         let dec_data = BIDECDSA.decrypt(api_response.data, sharedKey);
         api_response = JSON.parse(dec_data);
-      }
-    }
-
-    if (status !== 200) {
-      return {
-        error_code: api_response.code,
-        message: api_response.message
       }
     }
 

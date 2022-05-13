@@ -13,19 +13,12 @@ const BIDECDSA = require('./BIDECDSA');
 const BIDSDK = require('./BIDSDK');
 const fetch = require('node-fetch');
 
-const sendSMS = async (smsTo, smsISDCode, smsTemplate, sessionUrl) => {
+const sendSMS = async (smsTo, smsISDCode, smsTemplateB64) => {
     try {
         const keySet = BIDSDK.getKeySet();
         const licenseKey = BIDSDK.getLicense();
         const sd = await BIDSDK.getSD();
         const communityInfo = await BIDSDK.getCommunityInfo();
-
-        if (!smsTemplate || !smsTemplate.includes("<link>")) {
-            return {
-                error_code: 400,
-                message: "Provided SMS template is invalid, Please Provide valid template"
-            }
-        }
 
         const {
             community:
@@ -34,9 +27,6 @@ const sendSMS = async (smsTo, smsISDCode, smsTemplate, sessionUrl) => {
                 tenantid: tenantId,
                 id: communityId
             },
-            tenant: {
-                tenanttag: tenantTag
-            }
         } = communityInfo;
 
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, communityPublicKey);
@@ -50,18 +40,10 @@ const sendSMS = async (smsTo, smsISDCode, smsTemplate, sessionUrl) => {
         let headers = {
             'Content-Type': 'application/json',
             'charset': 'utf-8',
-            'X-TenantTag': tenantTag,
             publickey: keySet.pKey,
             licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
             requestid: encryptedRequestId
         };
-
-        const templateText = smsTemplate
-            .toString()
-            .replace(/<tenantname>/, communityInfo.tenant.name)
-            .replace(/<link>/, sessionUrl);
-
-        const smsTemplateB64 = Buffer.from(templateText).toString('base64');
 
         const req = {
             tenantId,
