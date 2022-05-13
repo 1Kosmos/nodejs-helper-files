@@ -205,10 +205,6 @@ const pollSessionResult = async (dvcId, sessionId) => {
       }
     }
 
-    if (api_response.responseStatus === "INPROGRESS") {
-      return { error_code: 404, message: "Scan session is still in progress" }
-    }
-
     return api_response;
 
   } catch (error) {
