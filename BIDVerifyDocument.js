@@ -150,12 +150,8 @@ const createDocumentSession = async (dvcId, documentType) => {
     if (api_response) {
       api_response = await api_response.json();
     }
-
-    if (status !== 200) {
-      return api_response;
-    }
-
-    return ({ sessionId: api_response.sessionId, sessionUrl: api_response.url });
+ 
+    return api_response;
 
   } catch (error) {
     throw error;
