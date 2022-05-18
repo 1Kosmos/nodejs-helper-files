@@ -30,7 +30,7 @@ const fetchAttestationOptions = async (optionsRequest) => {
       requestid: uuidv4()
     }
 
-    let api_respose = await fetch(sd.webauthn + "/attestation/options", {
+    let api_respose = await fetch(sd.webauthn + "/u1/attestation/options", {
       method: 'post',
       body: JSON.stringify(req),
       headers: headers
@@ -65,7 +65,7 @@ const submitAttestationResult = async (resultRequest) => {
       requestid: uuidv4()
     }
 
-    let api_respose = await fetch(sd.webauthn + "/attestation/result", {
+    let api_respose = await fetch(sd.webauthn + "/u1/attestation/result", {
       method: 'post',
       body: JSON.stringify(req),
       headers: headers
@@ -101,7 +101,7 @@ const fetchAssertionOptions = async (optionsRequest) => {
       requestid: uuidv4()
     }
 
-    let api_respose = await fetch(sd.webauthn + "/assertion/options", {
+    let api_respose = await fetch(sd.webauthn + "/u1/assertion/options", {
       method: 'post',
       body: JSON.stringify(req),
       headers: headers
@@ -136,7 +136,7 @@ const submitAssertionResult = async (resultRequest) => {
       requestid: uuidv4()
     }
 
-    let api_respose = await fetch(sd.webauthn + "/assertion/result", {
+    let api_respose = await fetch(sd.webauthn + "/u1/assertion/result", {
       method: 'post',
       body: JSON.stringify(req),
       headers: headers
