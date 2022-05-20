@@ -18,39 +18,10 @@ let tenant = {
   communityName: 'default'
 };
 
-let loaded = false;
-
 let communityInfo = null;
 let sd = null;
 
-let licenseKey = "";
-
 let keySet = null;
-
-const setupTenant = async (obj, license) => {
-    loaded = false;
-    communityInfo = null;//clear out.
-    sd = null;
-    tenant = obj;
-    licenseKey = license;
-    
-    if (!keySet) {
-      let keys = BIDECDSA.generateKeyPair();
-      keySet = {
-        prKey: keys[0],
-        pKey: keys[1]
-      };
-    }
-
-    await loadCommunityInfo();
-
-    loaded = true;
-    return true;
-}
-
-const isLoaded =() => {
-  return loaded;
-}
 
 const getTenant = () => {
   return tenant;
@@ -78,19 +49,26 @@ const setKeySet = (prKey, pKey) => {
   return keySet;
 }
 
-const getCommunityInfo = () => {
-  let url = "https://" + tenant.dns + "/api/r1/system/community_info/fetch";
+const getCommunityInfo = (tenantInfo) => {
+
+  let url = "https://" + tenantInfo.dns + "/api/r1/system/community_info/fetch";
   let communityInfoCache = cache.get(url);
+
+  if (!keySet) {
+    let keys = BIDECDSA.generateKeyPair();
+    keySet = {
+      prKey: keys[0],
+      pKey: keys[1]
+    };
+  }
+
+  tenant = tenantInfo;  
 
   if (!communityInfoCache) {
     return loadCommunityInfo();
   }
 
   return communityInfoCache;
-}
-
-const getLicense = () => {
-  return licenseKey;
 }
 
 const loadCommunityInfo = async () => {
@@ -165,12 +143,9 @@ const loadSD = async (url) => {
 }
 
 module.exports = {
-  setupTenant,
   getSD,
   getKeySet,
   getTenant,
   getCommunityInfo,
-  getLicense,
-  isLoaded,
   setKeySet
 }

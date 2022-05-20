@@ -12,11 +12,11 @@ const BIDECDSA = require('./BIDECDSA');
 const BIDSDK = require('./BIDSDK');
 const fetch = require('node-fetch');
 
-const requestOTP = async (userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull) => {
+const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
+    const communityInfo = await BIDSDK.getCommunityInfo(tenantInfo);
     const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
+    const licenseKey = tenantInfo.licenseKey;
     const sd = await BIDSDK.getSD();
 
     let req = {
@@ -70,11 +70,11 @@ const requestOTP = async (userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull
   }
 }
 
-const verifyOTP = async (userName, otpCode) => {
+const verifyOTP = async (tenantInfo, userName, otpCode) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
+    const communityInfo = await BIDSDK.getCommunityInfo(tenantInfo);
     const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
+    const licenseKey = tenantInfo.licenseKey;
     const sd = await BIDSDK.getSD();
 
     let req = {
