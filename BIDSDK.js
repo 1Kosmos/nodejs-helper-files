@@ -28,27 +28,27 @@ let licenseKey = "";
 let keySet = null;
 
 const setupTenant = async (obj, license) => {
-  loaded = false;
-  communityInfo = null;//clear out.
-  sd = null;
-  tenant = obj;
-  licenseKey = license;
+    loaded = false;
+    communityInfo = null;//clear out.
+    sd = null;
+    tenant = obj;
+    licenseKey = license;
+    
+    if (!keySet) {
+      let keys = BIDECDSA.generateKeyPair();
+      keySet = {
+        prKey: keys[0],
+        pKey: keys[1]
+      };
+    }
 
-  if (!keySet) {
-    let keys = BIDECDSA.generateKeyPair();
-    keySet = {
-      prKey: keys[0],
-      pKey: keys[1]
-    };
-  }
+    await loadCommunityInfo();
 
-  await loadCommunityInfo();
-
-  loaded = true;
-  return true;
+    loaded = true;
+    return true;
 }
 
-const isLoaded = () => {
+const isLoaded =() => {
   return loaded;
 }
 
