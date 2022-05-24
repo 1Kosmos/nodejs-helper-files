@@ -62,11 +62,14 @@ const getCommunityInfo = async (tenantInfo) => {
             communityCacheKey = `${communityCacheKey}_${tenantInfo.communityName}`;
         }
 
+        //check cache
         let communityInfoCache = cache.get(communityCacheKey);
 
         if (communityInfoCache) {
             return communityInfoCache;
         }
+        
+        //no cache found.. let's get live data.
 
         let url = "https://" + tenantInfo.dns + "/api/r1/system/community_info/fetch";
 
@@ -108,11 +111,14 @@ const getSD = async (tenantInfo) => {
             sdCacheKey = `${sdCacheKey}_${tenantInfo.communityName}`;
         }
 
+        //check cache
         let sdCache = cache.get(sdCacheKey);
 
         if (sdCache) {
             return sdCache;
         }
+        
+        //no cache found, get live data.
 
         let sdUrl = "https://" + tenantInfo.dns + "/caas/sd";
 
