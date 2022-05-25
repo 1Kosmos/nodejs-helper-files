@@ -11,7 +11,6 @@ const { v4: uuidv4 } = require('uuid');
 const NodeCache = require('node-cache');
 
 const BIDECDSA = require('./BIDECDSA');
-const BIDSDK = require('./BIDSDK');
 const fetch = require('node-fetch');
 const BIDTenant = require('./BIDTenant');
 
@@ -19,7 +18,7 @@ const cache = new NodeCache({ stdTTL: 10 * 60 });
 
 const getDocVerifyPublicKey = async (tenantInfo) => {
   try {
-    const sd = await BIDSDK.getSD(tenantInfo);
+    const sd = await BIDTenant.getSD(tenantInfo);
     let docVerifyPublicKeyCache = cache.get(sd.docuverify + "/publickeys");
 
     if (docVerifyPublicKeyCache) {

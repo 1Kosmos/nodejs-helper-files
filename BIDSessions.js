@@ -10,7 +10,6 @@ const { v4: uuidv4 } = require('uuid');
 const NodeCache = require('node-cache');
 const BIDECDSA = require('./BIDECDSA');
 const BIDTenant = require('./BIDTenant');
-const BIDSDK = require('./BIDSDK');
 const BIDUsers = require('./BIDUsers');
 const fetch = require('node-fetch');
 
@@ -18,8 +17,7 @@ const cache = new NodeCache({ stdTTL: 10 * 60 });
 
 const getSessionPublicKey = async (tenantInfo) => {
   try {
-    const sd = await BIDSDK.getSD(tenantInfo);
-
+    const sd = await BIDTenant.getSD(tenantInfo);
     let sessionsPublicKeyCache = cache.get(sd.sessions + "/publickeys");
 
     if (sessionsPublicKeyCache) {
@@ -168,7 +166,7 @@ const pollSession = async (tenantInfo, sessionId, fetchProfile, fetchDevices) =>
     }
 
     if (ret && ret.user_data && ret.user_data.did && fetchProfile === true) {
-      ret.account_data = await BIDUsers.fetchUserByDID(ret.user_data.did, fetchDevices);
+      ret.account_data = await BIDUsers.fetchUserByDID(tenantInfo, ret.user_data.did, fetchDevices);
     }
 
     return ret;
