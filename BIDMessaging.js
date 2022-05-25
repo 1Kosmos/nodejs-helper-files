@@ -10,15 +10,15 @@
 const { v4: uuidv4 } = require('uuid');
 
 const BIDECDSA = require('./BIDECDSA');
-const BIDSDK = require('./BIDSDK');
 const fetch = require('node-fetch');
+const BIDTenant = require('./BIDTenant');
 
-const sendSMS = async (smsTo, smsISDCode, smsTemplateB64) => {
+const sendSMS = async (tenantInfo, smsTo, smsISDCode, smsTemplateB64) => {
     try {
-        const keySet = BIDSDK.getKeySet();
-        const licenseKey = BIDSDK.getLicense();
-        const sd = await BIDSDK.getSD();
-        const communityInfo = await BIDSDK.getCommunityInfo();
+        const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+        const keySet = BIDTenant.getKeySet();
+        const licenseKey = tenantInfo.licenseKey;
+        const sd = await BIDTenant.getSD(tenantInfo);
 
         const {
             community:

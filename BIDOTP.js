@@ -9,15 +9,15 @@
 "use strict";
 const { v4: uuidv4 } = require('uuid');
 const BIDECDSA = require('./BIDECDSA');
-const BIDHelper = require('./BIDHelper');
+const BIDTenant = require('./BIDTenant');
 const fetch = require('node-fetch');
 
 const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull) => {
   try {
-    const communityInfo = await BIDHelper.getCommunityInfo(tenantInfo);
-    const keySet = BIDHelper.getKeySet();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
     const licenseKey = tenantInfo.licenseKey;
-    const sd = await BIDHelper.getSD(tenantInfo);
+    const sd = await BIDTenant.getSD(tenantInfo);
 
     let req = {
       userId: userName,
@@ -72,10 +72,10 @@ const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsI
 
 const verifyOTP = async (tenantInfo, userName, otpCode) => {
   try {
-    const communityInfo = await BIDHelper.getCommunityInfo(tenantInfo);
-    const keySet = BIDHelper.getKeySet();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
     const licenseKey = tenantInfo.licenseKey;
-    const sd = await BIDHelper.getSD(tenantInfo);
+    const sd = await BIDTenant.getSD(tenantInfo);
 
     let req = {
       userId: userName,

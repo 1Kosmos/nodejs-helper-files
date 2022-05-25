@@ -11,12 +11,13 @@ const NodeCache = require('node-cache');
 const BIDECDSA = require('./BIDECDSA');
 const BIDSDK = require('./BIDSDK');
 const fetch = require('node-fetch');
+const BIDTenant = require('./BIDTenant');
 
 const cache = new NodeCache({ stdTTL: 10 * 60 });
 
-const getPublickey = async () => {
+const getPublickey = async (tenantInfo) => {
   try {
-    const sd = await BIDSDK.getSD();
+    const sd = await BIDSDK.getSD(tenantInfo);
 
     let pkCache = cache.get(sd.webauthn + "/publickeys");
 
@@ -47,14 +48,14 @@ const getPublickey = async () => {
   }
 }
 
-const fetchAttestationOptions = async (optionsRequest) => {
+const fetchAttestationOptions = async (tenantInfo, optionsRequest) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
-    const waPublicKey = await getPublickey();
+    const waPublicKey = await getPublickey(tenantInfo);
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, waPublicKey);
 
     let req = {
@@ -101,14 +102,14 @@ const fetchAttestationOptions = async (optionsRequest) => {
   }
 }
 
-const submitAttestationResult = async (resultRequest) => {
+const submitAttestationResult = async (tenantInfo, resultRequest) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
-    const waPublicKey = await getPublickey();
+    const waPublicKey = await getPublickey(tenantInfo);
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, waPublicKey);
 
     let req = {
@@ -155,14 +156,14 @@ const submitAttestationResult = async (resultRequest) => {
   }
 }
 
-const fetchAssertionOptions = async (optionsRequest) => {
+const fetchAssertionOptions = async (tenantInfo, optionsRequest) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
-    const waPublicKey = await getPublickey();
+    const waPublicKey = await getPublickey(tenantInfo);
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, waPublicKey);
 
     let req = {
@@ -209,14 +210,14 @@ const fetchAssertionOptions = async (optionsRequest) => {
   }
 }
 
-const submitAssertionResult = async (resultRequest) => {
+const submitAssertionResult = async (tenantInfo, resultRequest) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
-    const waPublicKey = await getPublickey();
+    const waPublicKey = await getPublickey(tenantInfo);
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, waPublicKey);
 
     let req = {
