@@ -11,14 +11,14 @@ const { v4: uuidv4 } = require('uuid');
 const NodeCache = require('node-cache');
 
 const BIDECDSA = require('./BIDECDSA');
-const BIDSDK = require('./BIDSDK');
 const fetch = require('node-fetch');
+const BIDTenant = require('./BIDTenant');
 
 const cache = new NodeCache({ stdTTL: 10 * 60 });
 
-const getDocVerifyPublicKey = async () => {
+const getDocVerifyPublicKey = async (tenantInfo) => {
   try {
-    const sd = await BIDSDK.getSD();
+    const sd = await BIDTenant.getSD(tenantInfo);
     let docVerifyPublicKeyCache = cache.get(sd.docuverify + "/publickeys");
 
     if (docVerifyPublicKeyCache) {
@@ -48,12 +48,13 @@ const getDocVerifyPublicKey = async () => {
   }
 }
 
-const verifyDocument = async (dvcId, verifications, document) => {
+const verifyDocument = async (tenantInfo, dvcId, verifications, document) => {
   try {
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
-    const docVerifyPublicKey = await getDocVerifyPublicKey();
+
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
+    const docVerifyPublicKey = await getDocVerifyPublicKey(tenantInfo);
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, docVerifyPublicKey);
 
@@ -98,14 +99,13 @@ const verifyDocument = async (dvcId, verifications, document) => {
   }
 }
 
-const createDocumentSession = async (dvcId, documentType) => {
+const createDocumentSession = async (tenantInfo, dvcId, documentType) => {
   try {
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
-    const docVerifyPublicKey = await getDocVerifyPublicKey();
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const tenantInfo = BIDSDK.getTenant();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
+    const docVerifyPublicKey = await getDocVerifyPublicKey(tenantInfo);
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, docVerifyPublicKey);
     let userUIDAndDid = uuidv4();
@@ -145,7 +145,6 @@ const createDocumentSession = async (dvcId, documentType) => {
       headers: headers
     });
 
-    let status = api_response.status;
 
     if (api_response) {
       api_response = await api_response.json();
@@ -158,12 +157,12 @@ const createDocumentSession = async (dvcId, documentType) => {
   }
 }
 
-const pollSessionResult = async (dvcId, sessionId) => {
+const pollSessionResult = async (tenantInfo, dvcId, sessionId) => {
   try {
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
-    const docVerifyPublicKey = await getDocVerifyPublicKey();
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
+    const docVerifyPublicKey = await getDocVerifyPublicKey(tenantInfo);
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, docVerifyPublicKey);
 
