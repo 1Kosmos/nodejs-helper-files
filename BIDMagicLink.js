@@ -13,7 +13,7 @@ const BIDECDSA = require('./BIDECDSA');
 const fetch = require('node-fetch');
 const BIDTenant = require('./BIDTenant');
 
-const requestMagicLink = async (tenantInfo, userId, emailTo, emailTemplateB64, emailSubject) => {
+const requestMagicLink = async (tenantInfo, userId, emailTo, emailTemplateB64, emailSubject, type, version) => {
     try {
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
         const keySet = BIDTenant.getKeySet();
@@ -49,8 +49,8 @@ const requestMagicLink = async (tenantInfo, userId, emailTo, emailTemplateB64, e
 
         const req = {
             createdBy: "helper-files",
-            version: "v0",
-            type: "verification_link",
+            version,
+            type,
             userId,
             emailTo,
             emailTemplateB64,
@@ -72,6 +72,21 @@ const requestMagicLink = async (tenantInfo, userId, emailTo, emailTemplateB64, e
             api_response = await api_response.json();
         }
         return api_response;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+const requestEmailVerificationLink = async (tenantInfo, userId, emailTo, emailTemplateB64, emailSubject) => {
+    try {
+
+        const version = "v0";
+        const type = "verification_link";
+
+        const response = await requestMagicLink(tenantInfo, userId, emailTo, emailTemplateB64, emailSubject, type, version);
+
+        return response;
 
     } catch (error) {
         throw error;
@@ -117,11 +132,10 @@ const redeemEmailVerificationLink = async (tenantInfo, code) => {
             body: JSON.stringify({}),
             headers: headers
         });
-
+        console.log('api_response.status:', api_response.status);
         if (api_response) {
             api_response = await api_response.json();
         }
-
         return api_response;
 
     } catch (error) {
@@ -130,6 +144,6 @@ const redeemEmailVerificationLink = async (tenantInfo, code) => {
 }
 
 module.exports = {
-    requestMagicLink,
+    requestEmailVerificationLink,
     redeemEmailVerificationLink
 }
