@@ -67,7 +67,7 @@ const requestMagicLink = async (tenantInfo, userId, emailTo, emailTemplateB64, e
             body: JSON.stringify({ data: encryptedData }),
             headers: headers
         });
-
+        console.log('api_response.status:', api_response.status);
         if (api_response) {
             api_response = await api_response.json();
         }
@@ -78,6 +78,58 @@ const requestMagicLink = async (tenantInfo, userId, emailTo, emailTemplateB64, e
     }
 }
 
+const redeemEmailVerificationLink = async (tenantInfo, code) => {
+    try {
+        const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+        const licenseKey = tenantInfo.licenseKey;
+        const sd = await BIDTenant.getSD(tenantInfo);
+        const keySet = BIDTenant.getKeySet();
+
+        const {
+            community: {
+                publicKey: communityPublicKey,
+                name: communityName
+            },
+            tenant: {
+                tenanttag: tenantTag
+            }
+        } = communityInfo;
+
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, communityPublicKey);
+
+        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+            ts: Math.round(new Date().getTime() / 1000),
+            appid: 'fixme',
+            uuid: uuidv4()
+        }), sharedKey);
+
+        let headers = {
+            'Content-Type': 'application/json',
+            'charset': 'utf-8',
+            'X-tenantTag': tenantTag,
+            publickey: keySet.pKey,
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: encryptedRequestId
+        };
+
+        let api_response = await fetch(sd.adminconsole + "/api/r1/acr/community/" + communityName + "/" + code + "/redeem", {
+            method: 'post',
+            body: JSON.stringify({}),
+            headers: headers
+        });
+
+        if (api_response) {
+            api_response = await api_response.json();
+        }
+
+        return api_response;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 module.exports = {
-    requestMagicLink
+    requestMagicLink,
+    redeemEmailVerificationLink
 }
