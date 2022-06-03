@@ -67,10 +67,11 @@ const requestMagicLink = async (tenantInfo, userId, emailTo, emailTemplateB64, e
             body: JSON.stringify({ data: encryptedData }),
             headers: headers
         });
-        console.log('api_response.status:', api_response.status);
+
         if (api_response) {
             api_response = await api_response.json();
         }
+        
         return api_response;
 
     } catch (error) {
@@ -132,10 +133,11 @@ const redeemEmailVerificationLink = async (tenantInfo, code) => {
             body: JSON.stringify({}),
             headers: headers
         });
-        console.log('api_response.status:', api_response.status);
+
         if (api_response) {
             api_response = await api_response.json();
         }
+
         return api_response;
 
     } catch (error) {
