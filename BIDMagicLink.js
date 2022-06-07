@@ -13,7 +13,7 @@ const BIDECDSA = require('./BIDECDSA');
 const fetch = require('node-fetch');
 const BIDTenant = require('./BIDTenant');
 
-const requestEmailVerificationLink = async (tenantInfo, userId, emailToOrNull, smsToOrNull, emailTemplateB64OrNull, smsTemplateB64OrNull, emailSubjectOrNull, verificationLinkExpiryInSecondsOrNull) => {
+const requestEmailVerificationLink = async (tenantInfo, emailToOrNull, emailTemplateB64OrNull, emailSubjectOrNull, ttl_seconds_or_null) => {
     try {
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
         const keySet = BIDTenant.getKeySet();
@@ -50,12 +50,11 @@ const requestEmailVerificationLink = async (tenantInfo, userId, emailToOrNull, s
         const req = {
             createdBy: "blockid-helpers",
             version: "v0",
-            type: "verification_link",
-            userId
+            type: "verification_link"
         };
 
-        if (verificationLinkExpiryInSecondsOrNull !== null) {
-            req.ttl_seconds = verificationLinkExpiryInSecondsOrNull;
+        if (ttl_seconds_or_null !== null) {
+            req.ttl_seconds = ttl_seconds_or_null;
         }
 
         if (emailToOrNull !== null) {
@@ -68,14 +67,6 @@ const requestEmailVerificationLink = async (tenantInfo, userId, emailToOrNull, s
 
         if (emailSubjectOrNull !== null) {
             req.emailSubject = emailSubjectOrNull
-        }
-
-        if (smsToOrNull !== null) {
-            req.smsTo = smsToOrNull;
-        }
-
-        if (smsTemplateB64OrNull !== null) {
-            req.smsTemplateB64 = smsTemplateB64OrNull;
         }
 
         const encryptedData = BIDECDSA.encrypt(
