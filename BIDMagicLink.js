@@ -13,8 +13,14 @@ const BIDECDSA = require('./BIDECDSA');
 const fetch = require('node-fetch');
 const BIDTenant = require('./BIDTenant');
 
-const requestEmailVerificationLink = async (tenantInfo, emailToOrNull, emailTemplateB64OrNull, emailSubjectOrNull, ttl_seconds_or_null) => {
+const requestEmailVerificationLink = async (tenantInfo, emailTo, emailTemplateB64OrNull, emailSubjectOrNull, createdBy, ttl_seconds_or_null) => {
     try {
+        
+        if (!emailTo) {
+            return null;
+        }
+
+        
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
         const keySet = BIDTenant.getKeySet();
         const licenseKey = tenantInfo.licenseKey;
@@ -48,17 +54,14 @@ const requestEmailVerificationLink = async (tenantInfo, emailToOrNull, emailTemp
         };
 
         const req = {
-            createdBy: "blockid-helpers",
+            createdBy,
             version: "v0",
-            type: "verification_link"
+            type: "verification_link",
+            emailTo
         };
 
         if (ttl_seconds_or_null !== null) {
             req.ttl_seconds = ttl_seconds_or_null;
-        }
-
-        if (emailToOrNull !== null) {
-            req.emailTo = emailToOrNull;
         }
 
         if (emailTemplateB64OrNull !== null) {
