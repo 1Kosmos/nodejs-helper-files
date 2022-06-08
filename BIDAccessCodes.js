@@ -15,12 +15,11 @@ const BIDTenant = require('./BIDTenant');
 
 const requestEmailVerificationLink = async (tenantInfo, emailTo, emailTemplateB64OrNull, emailSubjectOrNull, createdBy, ttl_seconds_or_null) => {
     try {
-        
+
         if (!emailTo) {
-            return null;
+            return { statusCode: 400, message: "emailTo is required parameter" }
         }
 
-        
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
         const keySet = BIDTenant.getKeySet();
         const licenseKey = tenantInfo.licenseKey;
@@ -82,10 +81,14 @@ const requestEmailVerificationLink = async (tenantInfo, emailTo, emailTemplateB6
             body: JSON.stringify({ data: encryptedData }),
             headers: headers
         });
-
+        
+        let status = api_response.status;
+        
         if (api_response) {
             api_response = await api_response.json();
         }
+        
+        api_response.statusCode = status;
 
         return api_response;
 
