@@ -184,7 +184,7 @@ const verifyAndRedeemEmailVerificationCode = async (tenantInfo, code) => {
         }
 
         if (access_code_response.type !== 'verification_link') {
-            return { statusCode: 400, message: "Provided verification code is invalid" };
+            return { statusCode: 400, message: "Provided verification code is invalid type" };
         }
 
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, communityPublicKey);
