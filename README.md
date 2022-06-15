@@ -12,7 +12,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-     "blockid-nodejs-helpers": "https://github.com/1Kosmos/nodejs-helper-files#v1.0.0"
+     "blockid-nodejs-helpers": "https://github.com/1Kosmos/nodejs-helper-files#v2.0.0"
   },
  "description": "My project"
 }
