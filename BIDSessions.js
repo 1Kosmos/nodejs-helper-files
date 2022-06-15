@@ -9,16 +9,15 @@
 const { v4: uuidv4 } = require('uuid');
 const NodeCache = require('node-cache');
 const BIDECDSA = require('./BIDECDSA');
-const BIDSDK = require('./BIDSDK');
+const BIDTenant = require('./BIDTenant');
 const BIDUsers = require('./BIDUsers');
 const fetch = require('node-fetch');
 
 const cache = new NodeCache({ stdTTL: 10 * 60 });
 
-const getSessionPublicKey = async () => {
+const getSessionPublicKey = async (tenantInfo) => {
   try {
-    const sd = await BIDSDK.getSD();
-
+    const sd = await BIDTenant.getSD(tenantInfo);
     let sessionsPublicKeyCache = cache.get(sd.sessions + "/publickeys");
 
     if (sessionsPublicKeyCache) {
@@ -49,13 +48,15 @@ const getSessionPublicKey = async () => {
 
 }
 
-const createNewSession = async (authType, scopes) => {
+const createNewSession = async (tenantInfo, authType, scopes) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
-    let sessionsPublicKey = await getSessionPublicKey();
+
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
+
+    let sessionsPublicKey = await getSessionPublicKey(tenantInfo);
 
     let req = {
       origin: {
@@ -92,6 +93,16 @@ const createNewSession = async (authType, scopes) => {
     });
 
     if (api_response) {
+
+      let status = api_response.status;
+      if (status !== 201) {
+        api_response = {
+          status: status,
+          message: await api_response.text()
+        }
+        return api_response;
+      }
+
       api_response = await api_response.json();
       api_response.url = sd.sessions;
     }
@@ -102,13 +113,14 @@ const createNewSession = async (authType, scopes) => {
   }
 }
 
-const pollSession = async (sessionId, fetchProfile, fetchDevices) => {
+const pollSession = async (tenantInfo, sessionId, fetchProfile, fetchDevices) => {
   try {
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
 
-    let sessionsPublicKey = await getSessionPublicKey();
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
+
+    let sessionsPublicKey = await getSessionPublicKey(tenantInfo);
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
 
@@ -154,7 +166,7 @@ const pollSession = async (sessionId, fetchProfile, fetchDevices) => {
     }
 
     if (ret && ret.user_data && ret.user_data.did && fetchProfile === true) {
-      ret.account_data = await BIDUsers.fetchUserByDID(ret.user_data.did, fetchDevices);
+      ret.account_data = await BIDUsers.fetchUserByDID(tenantInfo, ret.user_data.did, fetchDevices);
     }
 
     return ret;

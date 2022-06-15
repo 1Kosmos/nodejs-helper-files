@@ -9,15 +9,15 @@
 "use strict";
 const { v4: uuidv4 } = require('uuid');
 const BIDECDSA = require('./BIDECDSA');
-const BIDSDK = require('./BIDSDK');
+const BIDTenant = require('./BIDTenant');
 const fetch = require('node-fetch');
 
-const requestOTP = async (userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull) => {
+const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
     let req = {
       userId: userName,
@@ -70,12 +70,12 @@ const requestOTP = async (userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull
   }
 }
 
-const verifyOTP = async (userName, otpCode) => {
+const verifyOTP = async (tenantInfo, userName, otpCode) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
     let req = {
       userId: userName,

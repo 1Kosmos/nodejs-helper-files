@@ -8,15 +8,15 @@
 "use strict";
 const { v4: uuidv4 } = require('uuid');
 const BIDECDSA = require('./BIDECDSA');
-const BIDSDK = require('./BIDSDK');
+const BIDTenant = require('./BIDTenant');
 const fetch = require('node-fetch');
 
-const fetchUserByDID = async (did, fetchDevices) => {
+const fetchUserByDID = async (tenantInfo, did, fetchDevices) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const keySet = BIDSDK.getKeySet();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const keySet = BIDTenant.getKeySet();
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, communityInfo.community.publicKey);
 

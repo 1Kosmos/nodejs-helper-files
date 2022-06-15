@@ -7,14 +7,14 @@
  */
 "use strict";
 const { v4: uuidv4 } = require('uuid');
-const BIDSDK = require('./BIDSDK');
 const fetch = require('node-fetch');
+const BIDTenant = require('./BIDTenant');
 
-const fetchAttestationOptions = async (optionsRequest) => {
+const fetchAttestationOptions = async (tenantInfo, optionsRequest) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
     let req = {
       ...optionsRequest,
@@ -46,11 +46,11 @@ const fetchAttestationOptions = async (optionsRequest) => {
   }
 }
 
-const submitAttestationResult = async (resultRequest) => {
+const submitAttestationResult = async (tenantInfo, resultRequest) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
     let req = {
       ...resultRequest,
@@ -81,11 +81,11 @@ const submitAttestationResult = async (resultRequest) => {
   }
 }
 
-const fetchAssertionOptions = async (optionsRequest) => {
+const fetchAssertionOptions = async (tenantInfo, optionsRequest) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
     let req = {
       ...optionsRequest,
@@ -117,11 +117,11 @@ const fetchAssertionOptions = async (optionsRequest) => {
   }
 }
 
-const submitAssertionResult = async (resultRequest) => {
+const submitAssertionResult = async (tenantInfo, resultRequest) => {
   try {
-    const communityInfo = await BIDSDK.getCommunityInfo();
-    const licenseKey = BIDSDK.getLicense();
-    const sd = await BIDSDK.getSD();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+    const licenseKey = tenantInfo.licenseKey;
+    const sd = await BIDTenant.getSD(tenantInfo);
 
     let req = {
       ...resultRequest,
