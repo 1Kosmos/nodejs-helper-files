@@ -7,7 +7,15 @@
  */
 "use strict";
 const fetch = require('node-fetch')
-const executeRequest = async(method, url, headers, body) => {
+const NodeCache = require('node-cache')
+const cache = new NodeCache();
+const executeRequest = async(method, url, headers, body, cacheKey, ttl) => {
+
+    let cachedData = cacheKey ? await cache.get(cacheKey) : null
+    if (cachedData) {
+        return cachedData
+    }
+
     let request = {
         method: method
     }
@@ -28,6 +36,10 @@ const executeRequest = async(method, url, headers, body) => {
         } catch (error) {
             ret.error = error
         }
+      }
+
+      if (cacheKey && (ret.status === 200 || ret.status === 201)) {
+          cache.set(cacheKey, ttl)
       }
   
       return ret
