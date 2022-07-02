@@ -10,26 +10,37 @@ const fetch = require('node-fetch')
 const NodeCache = require('node-cache')
 const cache = new NodeCache();
 const httpStatus = require('http-status');
+/*
+request object 
+{
+    method: get/put/post/delete/patch
+    url
+    headers: {k:v}
+    body: json
+    cacheKey: string / optional
+    ttl: seconds
+    preCacheCallback: function(object) return for what to cache OR null to skip cache.
+}
+*/
+const executeRequest = async(object) => {
 
-const executeRequest = async(method, url, headers, body, cacheKey, ttl, preCacheCallback) => {
-
-    let cachedData = cacheKey ? await cache.get(cacheKey) : null
+    let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null
     if (cachedData) {
         return cachedData
     }
 
     let request = {
-        method: method
+        method: object.method
     }
 
-    if (headers) {
-        request.headers = headers
+    if (object.headers) {
+        request.headers = object.headers
     }
-    if (body) {
-        request.body = JSON.stringify(body)
+    if (object.body) {
+        request.body = JSON.stringify(object.body)
     }
     let ret = {}
-    let api_response = await fetch(url, request)
+    let api_response = await fetch(object.url, request)
     if (api_response) {
         ret.status = api_response.status
         ret.text = await api_response.text()
@@ -40,13 +51,13 @@ const executeRequest = async(method, url, headers, body, cacheKey, ttl, preCache
         }
       }
 
-      if (cacheKey && ret.status == httpStatus.OK) {
-          if (preCacheCallback) {
-              ret = preCacheCallback(ret)
+      if (object.cacheKey && ret.status == httpStatus.OK) {
+          if (object.preCacheCallback) {
+              ret = object.preCacheCallback(ret)
           }
           
           if (ret) {
-            cache.set(cacheKey, ret, ttl)
+            cache.set(object.cacheKey, ret, object.ttl)
           }
       }
   

@@ -33,16 +33,15 @@ const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = 
     }
 
     let url = `${serviceUrl}/servicekey/current`
-    let ret = (await WTM.executeRequest('get'
-                    , url
-                    , headers
-                    , null
-                    , cacheKey
-                    , 600
-                    , function(preCacheResult) {
+    let ret = (await WTM.executeRequest({method: 'get'
+                    , url: url
+                    , headers: headers
+                    , cacheKey: cacheKey
+                    , ttl: 600
+                    , preCacheCallback: function(preCacheResult) {
                         let allowed = preCacheResult.json.keySecret === licenseKey && !preCacheResult.json.disabled && moment(preCacheResult.json.expiry) > moment.now();
                         return allowed ? preCacheResult : null
-                    })).json
+                    }})).json
     
 
     return ret;
@@ -55,7 +54,7 @@ const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPa
     let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`
 
     let pubicKeyUrl = `${serviceUrl}/publickeys`
-    let publicKey = (await WTM.executeRequest('get', pubicKeyUrl, null, null, pubicKeyUrl, 600)).json.publicKey
+    let publicKey = (await WTM.executeRequest({method: 'get', url: pubicKeyUrl, cacheKey: pubicKeyUrl, ttl:600})).json.publicKey
 
     let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
 
