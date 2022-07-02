@@ -1,0 +1,96 @@
+/**
+ * Copyright (c) 2018, 1Kosmos Inc. All rights reserved.
+ * Licensed under 1Kosmos Open Source Public License version 1.0 (the "License");
+ * You may not use this file except in compliance with the License. 
+ * You may obtain a copy of this license at 
+ *    https://github.com/1Kosmos/1Kosmos_License/blob/main/LICENSE.txt
+ */
+"use strict";
+const WTM = require('./WTM');
+const BIDECDSA = require('./BIDECDSA')
+const { v4: uuidv4 } = require('uuid');
+const moment = require("moment")
+
+const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId) => {
+
+    let cacheKey = `${serviceUrl}/${licenseKey}`
+
+    let pubicKeyUrl = `${serviceUrl}/publickeys`
+    let publicKey = (await WTM.executeRequest('get', pubicKeyUrl, null, null, pubicKeyUrl, 600)).json.publicKey
+
+    let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
+
+    const requestId = JSON.stringify({
+        ts: Math.round(new Date().getTime() / 1000),
+        appid: senderId,
+        uuid: requestUID
+    });
+
+    const headers = {
+        licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+        requestid: BIDECDSA.encrypt(requestId, sharedKey),
+        publickey: myKeyPair.keyId
+    }
+
+    let url = `${serviceUrl}/servicekey/current`
+    let ret = (await WTM.executeRequest('get'
+                    , url
+                    , headers
+                    , null
+                    , cacheKey
+                    , 600
+                    , function(preCacheResult) {
+                        let allowed = preCacheResult.json.keySecret === licenseKey && !preCacheResult.json.disabled && moment(preCacheResult.json.expiry) > moment.now();
+                        return allowed ? preCacheResult : null
+                    })).json
+    
+
+    return ret;
+
+}
+
+
+const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId) => {
+
+    let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`
+
+    let pubicKeyUrl = `${serviceUrl}/publickeys`
+    let publicKey = (await WTM.executeRequest('get', pubicKeyUrl, null, null, pubicKeyUrl, 600)).json.publicKey
+
+    let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
+
+    const requestId = JSON.stringify({
+        ts: Math.round(new Date().getTime() / 1000),
+        appid: senderId,
+        uuid: requestUID
+    });
+
+    const headers = {
+        licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+        requestid: BIDECDSA.encrypt(requestId, sharedKey),
+        publickey: myKeyPair.keyId
+    }
+
+    let url = `${serviceUrl}/community/${communityId}/licensecheck`
+    let ret = (await WTM.executeRequest('get'
+                    , url
+                    , headers
+                    , null
+                    , cacheKey
+                    , 600
+                    , function(preCacheResult) {
+                        preCacheResult.json.keySecret = licenseKey
+                        let allowed = preCacheResult.json.isAuthorized &&  moment(preCacheResult.json.expiry) > moment.now();
+                        return allowed ? preCacheResult : null
+                    })).json
+    
+
+    return ret;
+
+}
+
+
+module.exports = {
+    getCurrentLicense,
+    checkCommunityLicense
+}

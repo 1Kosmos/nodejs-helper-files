@@ -23,10 +23,10 @@ const executeRequest = async(method, url, headers, body, cacheKey, ttl, preCache
     }
 
     if (headers) {
-        req.headers = headers
+        request.headers = headers
     }
     if (body) {
-        req.body = JSON.stringify(body)
+        request.body = JSON.stringify(body)
     }
     let ret = {}
     let api_response = await fetch(url, request)
@@ -41,10 +41,11 @@ const executeRequest = async(method, url, headers, body, cacheKey, ttl, preCache
       }
 
       if (cacheKey && ret.status == httpStatus.OK) {
-          if (preCacheCallback && preCacheCallback(ret)) {
-            cache.set(cacheKey, ret, ttl)
+          if (preCacheCallback) {
+              ret = preCacheCallback(ret)
           }
-          else {
+          
+          if (ret) {
             cache.set(cacheKey, ret, ttl)
           }
       }
