@@ -16,7 +16,7 @@ const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = 
     let cacheKey = `${serviceUrl}/${licenseKey}`
 
     let pubicKeyUrl = `${serviceUrl}/publickeys`
-    let publicKey = (await WTM.executeRequest('get', pubicKeyUrl, null, null, pubicKeyUrl, 600)).json.publicKey
+    let publicKey = (await WTM.executeRequest({method:'get', url: pubicKeyUrl, cacheKey:pubicKeyUrl, ttl:600})).json.publicKey
 
     let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
 
