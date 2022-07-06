@@ -71,17 +71,16 @@ const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPa
     }
 
     let url = `${serviceUrl}/community/${communityId}/licensecheck`
-    let ret = (await WTM.executeRequest('get'
-                    , url
-                    , headers
-                    , null
-                    , cacheKey
-                    , 600
-                    , function(preCacheResult) {
+    let ret = (await WTM.executeRequest({method: 'get'
+                    , url: url
+                    , headers: headers
+                    , cacheKey: cacheKey
+                    , ttl: 600
+                    , preCacheCallback: function(preCacheResult) {
                         preCacheResult.json.keySecret = licenseKey
                         let allowed = preCacheResult.json.isAuthorized &&  moment(preCacheResult.json.expiry) > moment.now();
                         return allowed ? preCacheResult : null
-                    })).json
+                    }})).json
     
 
     return ret;
