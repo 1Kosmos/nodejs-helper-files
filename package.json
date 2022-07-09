@@ -13,7 +13,8 @@
       "node-cache": "5.1.2",
       "node-fetch": "2.6.1",
       "http-status": "1.4.0",
-      "moment": "^2.29.3"
+      "moment": "^2.29.3",
+      "js-sha512": "^0.8.0"
       },
     "repository": {
       "type": "git",
