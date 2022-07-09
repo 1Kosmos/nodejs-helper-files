@@ -39,6 +39,11 @@ const executeRequest = async(object) => {
     if (object.body) {
         request.body = JSON.stringify(object.body)
     }
+
+    if (object.timeout !== undefined) {
+        request.timeout = object.timeout
+    }
+
     let ret = {}
     let api_response = await fetch(object.url, request)
     if (api_response) {
