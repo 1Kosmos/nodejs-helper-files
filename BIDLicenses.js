@@ -10,8 +10,32 @@ const WTM = require('./WTM');
 const BIDECDSA = require('./BIDECDSA')
 const { v4: uuidv4 } = require('uuid');
 const moment = require("moment")
+const sha512 = require('js-sha512')
+
+const makeInfraKey = () => {
+    let infraKey = process.env.INFRA_LICENSE_KEY
+    if (infraKey) {
+        const expiryDate = moment(moment.now()).add(1, 'year').toDate()
+        return  {
+            type: "hawk",
+            disabled: false,
+            expiry: expiryDate,
+            authLevel: "service",
+            tag: "infra_license_key",
+            keySecret: infraKey,
+            keyId: sha512(infraKey)
+        }
+    }
+    return null
+}
+
 
 const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId) => {
+
+    const infraKey = makeInfraKey()
+    if (infraKey && infraKey.keySecret === licenseKey) {
+        return infraKey
+    }
 
     let cacheKey = `${serviceUrl}/${licenseKey}`
 
@@ -50,6 +74,13 @@ const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = 
 
 
 const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId) => {
+
+    const infraKey = makeInfraKey()
+    if (infraKey && infraKey.keySecret === licenseKey) {
+        infraKey.isAuthorized = true
+        return infraKey
+    }
+    
 
     let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`
 
