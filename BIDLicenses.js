@@ -10,6 +10,7 @@ const WTM = require('./WTM');
 const BIDECDSA = require('./BIDECDSA')
 const { v4: uuidv4 } = require('uuid');
 const moment = require("moment")
+const sha512 = require('js-sha512')
 
 const makeInfraKey = () => {
     let infraKey = process.env.INFRA_LICENSE_KEY
