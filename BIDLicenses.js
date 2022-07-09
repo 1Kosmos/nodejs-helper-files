@@ -14,10 +14,11 @@ const moment = require("moment")
 const makeInfraKey = () => {
     let infraKey = process.env.INFRA_LICENSE_KEY
     if (infraKey) {
-       return  {
+        const expiryDate = moment(moment.now()).add(1, 'year').toDate()
+        return  {
             type: "hawk",
             disabled: false,
-            expiry: Helper.expiryDateFormat(),
+            expiry: expiryDate,
             authLevel: "service",
             tag: "infra_license_key",
             keySecret: infraKey,
