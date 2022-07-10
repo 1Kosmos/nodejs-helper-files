@@ -121,5 +121,6 @@ const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPa
 
 module.exports = {
     getCurrentLicense,
-    checkCommunityLicense
+    checkCommunityLicense,
+    makeInfraKey
 }
