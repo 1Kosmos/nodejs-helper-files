@@ -26,6 +26,9 @@ const executeRequest = async(object) => {
 
     let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null
     if (cachedData) {
+        if (object.Logger) {
+            object.Logger.info(`WTM ${object.method} call to ${object.url} with reqId: ${object.requestUID ? object.requestUID : "n/a"} skipped and using Cache`)
+        }
         return cachedData
     }
 
