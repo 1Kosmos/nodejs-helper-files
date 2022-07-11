@@ -63,6 +63,7 @@ const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = 
     let ret = (await WTM.executeRequest({method: 'get'
                     , url: url
                     , Logger: Logger
+                    , requestUID: requestUID
                     , headers: headers
                     , cacheKey: cacheKey
                     , ttl: 600
@@ -113,6 +114,7 @@ const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPa
     let ret = (await WTM.executeRequest({method: 'get'
                     , url: url
                     , Logger: Logger
+                    , requestUID: requestUID
                     , headers: headers
                     , cacheKey: cacheKey
                     , ttl: 600
