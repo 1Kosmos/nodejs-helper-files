@@ -30,10 +30,11 @@ const makeInfraKey = () => {
 }
 
 
-const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId) => {
+const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
 
     const infraKey = makeInfraKey()
     if (infraKey && infraKey.keySecret === licenseKey) {
+        Logger.info(`getCurrentLicense request (${requestUID}) for Hash:${sha512(licenseKey)} resulted in infraLicenses for ${serviceUrl} `)
         return infraKey
     }
 
@@ -57,8 +58,11 @@ const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = 
     }
 
     let url = `${serviceUrl}/servicekey/current`
+    Logger.info(`getCurrentLicense WTM for (${requestUID}) for checkCommunityLicense Hash:${sha512(licenseKey)} calling ${url} `)
+
     let ret = (await WTM.executeRequest({method: 'get'
                     , url: url
+                    , Logger: Logger
                     , headers: headers
                     , cacheKey: cacheKey
                     , ttl: 600
@@ -73,10 +77,11 @@ const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = 
 }
 
 
-const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId) => {
+const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
 
     const infraKey = makeInfraKey()
     if (infraKey && infraKey.keySecret === licenseKey) {
+        Logger.info(`request (${requestUID}) for checkCommunityLicense Hash:${sha512(licenseKey)} resulted in infraLicenses for ${serviceUrl} `)
         infraKey.isAuthorized = true
         return infraKey
     }
@@ -101,9 +106,13 @@ const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPa
         publickey: myKeyPair.keyId
     }
 
+    
     let url = `${serviceUrl}/community/${communityId}/licensecheck`
+    Logger.info(`checkCommunityLicense WTM for (${requestUID}) for checkCommunityLicense Hash:${sha512(licenseKey)} calling ${url} `)
+
     let ret = (await WTM.executeRequest({method: 'get'
                     , url: url
+                    , Logger: Logger
                     , headers: headers
                     , cacheKey: cacheKey
                     , ttl: 600
