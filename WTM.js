@@ -47,6 +47,11 @@ const executeRequest = async(object) => {
         request.timeout = object.timeout
     }
 
+    if (object.Logger) {
+        object.Logger.info(`WTM ${object.method} calling to ${object.url} with reqId: ${object.requestUID ? object.requestUID : "n/a"}`)
+    }
+
+
     let ret = {}
     let api_response = await fetch(object.url, request)
     if (api_response) {
