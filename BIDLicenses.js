@@ -1,47 +1,109 @@
 /**
  * Copyright (c) 2018, 1Kosmos Inc. All rights reserved.
- * Licensed under 1Kosmos Open Source Public License version 1.0 (the "License");
+ * Licensed under 1Kosmos Open Source Public License version 1.0 (the 'License');
  * You may not use this file except in compliance with the License. 
  * You may obtain a copy of this license at 
  *    https://github.com/1Kosmos/1Kosmos_License/blob/main/LICENSE.txt
  */
-"use strict";
-const WTM = require('./WTM');
-const BIDECDSA = require('./BIDECDSA')
+'use strict';
 const { v4: uuidv4 } = require('uuid');
-const moment = require("moment")
-const sha512 = require('js-sha512')
+const moment = require('moment');
+const sha512 = require('js-sha512');
+
+const WTM = require('./WTM');
+const BIDECDSA = require('./BIDECDSA');
 
 const makeInfraKey = () => {
-    let infraKey = process.env.INFRA_LICENSE_KEY
+    let infraKey = process.env.INFRA_LICENSE_KEY;
     if (infraKey) {
-        const expiryDate = moment(moment.now()).add(1, 'year').toDate()
-        return  {
-            type: "hawk",
+        const expiryDate = moment(moment.now()).add(1, 'year').toDate();
+        return {
+            type: 'hawk',
             disabled: false,
             expiry: expiryDate,
-            authLevel: "service",
-            tag: "infra_license_key",
+            authLevel: 'service',
+            tag: 'infra_license_key',
             keySecret: infraKey,
             keyId: sha512(infraKey)
+        };
+    }
+    return null;
+};
+
+const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
+
+    const infraKey = makeInfraKey();
+    if (infraKey && infraKey.keySecret === licenseKey) {
+        Logger.info(`getCurrentLicense requestId: ${requestUID} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        return infraKey;
+    }
+
+    let cacheKey = `${serviceUrl}/${licenseKey}`;
+
+    let pubicKeyUrl = `${serviceUrl}/publickeys`;
+    let publicKey = (await WTM.executeRequest({
+        method: 'get',
+        url: pubicKeyUrl,
+        Logger,
+        requestUID,
+        cacheKey: pubicKeyUrl,
+        ttl: 600
+    })).json.publicKey;
+
+    let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
+
+    const requestId = JSON.stringify({
+        ts: Math.round(new Date().getTime() / 1000),
+        appid: senderId,
+        uuid: requestUID
+    });
+
+    const headers = {
+        licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+        requestid: BIDECDSA.encrypt(requestId, sharedKey),
+        publickey: myKeyPair.keyId
+    };
+
+    let url = `${serviceUrl}/servicekey/current`;
+    Logger.info(`getCurrentLicense WTM for requestId: ${requestUID} for checkCommunityLicense Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+
+    let ret = (await WTM.executeRequest({
+        method: 'get',
+        url: url,
+        Logger,
+        requestUID,
+        headers: headers,
+        cacheKey: cacheKey,
+        ttl: 600,
+        preCacheCallback: function (preCacheResult) {
+            let allowed = preCacheResult.json.keySecret === licenseKey && !preCacheResult.json.disabled && moment(preCacheResult.json.expiry) > moment.now();
+            return allowed ? preCacheResult : null;
         }
-    }
-    return null
-}
+    })).json;
 
+    return ret;
+};
 
-const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
+const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
 
-    const infraKey = makeInfraKey()
+    const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`getCurrentLicense request (${requestUID}) for Hash:${sha512(licenseKey)} resulted in infraLicenses for ${serviceUrl} `)
-        return infraKey
+        Logger.info(`requestId: ${requestUID} for checkCommunityLicense Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        infraKey.isAuthorized = true;
+        return infraKey;
     }
 
-    let cacheKey = `${serviceUrl}/${licenseKey}`
+    let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`;
 
-    let pubicKeyUrl = `${serviceUrl}/publickeys`
-    let publicKey = (await WTM.executeRequest({method:'get', url: pubicKeyUrl, cacheKey:pubicKeyUrl, ttl:600})).json.publicKey
+    let pubicKeyUrl = `${serviceUrl}/publickeys`;
+    let publicKey = (await WTM.executeRequest({
+        method: 'get',
+        url: pubicKeyUrl,
+        Logger,
+        requestUID,
+        cacheKey: pubicKeyUrl,
+        ttl: 600
+    })).json.publicKey;
 
     let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
 
@@ -55,83 +117,31 @@ const getCurrentLicense = async(licenseKey, serviceUrl, myKeyPair, requestUID = 
         licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
         requestid: BIDECDSA.encrypt(requestId, sharedKey),
         publickey: myKeyPair.keyId
-    }
+    };
 
-    let url = `${serviceUrl}/servicekey/current`
-    Logger.info(`getCurrentLicense WTM for (${requestUID}) for checkCommunityLicense Hash:${sha512(licenseKey)} calling ${url} `)
+    let url = `${serviceUrl}/community/${communityId}/licensecheck`;
+    Logger.info(`checkCommunityLicense WTM for requestId: ${requestUID} for checkCommunityLicense Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
-    let ret = (await WTM.executeRequest({method: 'get'
-                    , url: url
-                    , Logger: Logger
-                    , requestUID: requestUID
-                    , headers: headers
-                    , cacheKey: cacheKey
-                    , ttl: 600
-                    , preCacheCallback: function(preCacheResult) {
-                        let allowed = preCacheResult.json.keySecret === licenseKey && !preCacheResult.json.disabled && moment(preCacheResult.json.expiry) > moment.now();
-                        return allowed ? preCacheResult : null
-                    }})).json
-    
-
-    return ret;
-
-}
-
-
-const checkCommunityLicense = async(licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
-
-    const infraKey = makeInfraKey()
-    if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`request (${requestUID}) for checkCommunityLicense Hash:${sha512(licenseKey)} resulted in infraLicenses for ${serviceUrl} `)
-        infraKey.isAuthorized = true
-        return infraKey
-    }
-    
-
-    let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`
-
-    let pubicKeyUrl = `${serviceUrl}/publickeys`
-    let publicKey = (await WTM.executeRequest({method: 'get', url: pubicKeyUrl, cacheKey: pubicKeyUrl, ttl:600})).json.publicKey
-
-    let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
-
-    const requestId = JSON.stringify({
-        ts: Math.round(new Date().getTime() / 1000),
-        appid: senderId,
-        uuid: requestUID
-    });
-
-    const headers = {
-        licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-        requestid: BIDECDSA.encrypt(requestId, sharedKey),
-        publickey: myKeyPair.keyId
-    }
-
-    
-    let url = `${serviceUrl}/community/${communityId}/licensecheck`
-    Logger.info(`checkCommunityLicense WTM for (${requestUID}) for checkCommunityLicense Hash:${sha512(licenseKey)} calling ${url} `)
-
-    let ret = (await WTM.executeRequest({method: 'get'
-                    , url: url
-                    , Logger: Logger
-                    , requestUID: requestUID
-                    , headers: headers
-                    , cacheKey: cacheKey
-                    , ttl: 600
-                    , preCacheCallback: function(preCacheResult) {
-                        preCacheResult.json.keySecret = licenseKey
-                        let allowed = preCacheResult.json.isAuthorized &&  moment(preCacheResult.json.expiry) > moment.now();
-                        return allowed ? preCacheResult : null
-                    }})).json
-    
+    let ret = (await WTM.executeRequest({
+        method: 'get',
+        url: url,
+        Logger,
+        requestUID,
+        headers: headers,
+        cacheKey: cacheKey,
+        ttl: 600,
+        preCacheCallback: function (preCacheResult) {
+            preCacheResult.json.keySecret = licenseKey;
+            let allowed = preCacheResult.json.isAuthorized && moment(preCacheResult.json.expiry) > moment.now();
+            return allowed ? preCacheResult : null;
+        }
+    })).json;
 
     return ret;
-
-}
-
+};
 
 module.exports = {
+    makeInfraKey,
     getCurrentLicense,
-    checkCommunityLicense,
-    makeInfraKey
-}
+    checkCommunityLicense
+};
