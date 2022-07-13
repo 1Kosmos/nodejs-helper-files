@@ -61,13 +61,18 @@ const executeRequest = async (object) => {
             ret.json = JSON.parse(ret.text);
         } catch (error) {
             ret.error = error;
+            if (object.Logger) {
+                object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
+            }
         }
     }
 
-    if ((ret.status === httpStatus.UNAUTHORIZED
-        || ret.status === httpStatus.FORBIDDEN
-        || ret.status === httpStatus.INTERNAL_SERVER_ERROR)
-        && object.Logger) {
+    const responseStatus = [
+        httpStatus.UNAUTHORIZED,
+        httpStatus.FORBIDDEN,
+        httpStatus.INTERNAL_SERVER_ERROR
+    ]
+    if (responseStatus.includes(ret.status) && object.Logger) {
         object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
     }
 
