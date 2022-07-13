@@ -34,7 +34,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
 
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`getCurrentLicense requestId: ${requestUID} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         return infraKey;
     }
 
@@ -65,7 +65,8 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
     };
 
     let url = `${serviceUrl}/servicekey/current`;
-    Logger.info(`getCurrentLicense WTM for requestId: ${requestUID} for checkCommunityLicense Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+
+    Logger.info(`BIDLicenses - getCurrentLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
@@ -88,7 +89,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
 
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`requestId: ${requestUID} for checkCommunityLicense Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - checkCommunityLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         infraKey.isAuthorized = true;
         return infraKey;
     }
@@ -120,7 +121,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     };
 
     let url = `${serviceUrl}/community/${communityId}/licensecheck`;
-    Logger.info(`checkCommunityLicense WTM for requestId: ${requestUID} for checkCommunityLicense Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - checkCommunityLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
