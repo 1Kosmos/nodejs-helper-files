@@ -41,7 +41,7 @@ const executeRequest = async (object) => {
         request.headers = object.headers;
     }
     if (object.body) {
-        request.body = JSON.stringify(object.body);
+        request.body = object.body;
     }
 
     if (object.timeout !== undefined) {
