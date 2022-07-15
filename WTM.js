@@ -42,6 +42,8 @@ const executeRequest = async (object) => {
     }
     if (object.body) {
         request.body = JSON.stringify(object.body);
+    } else if (object.urlSearchParams) {
+        request.body = object.urlSearchParams
     }
 
     if (object.timeout !== undefined) {
