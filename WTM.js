@@ -9,6 +9,7 @@
 const fetch = require('node-fetch');
 const NodeCache = require('node-cache');
 const httpStatus = require('http-status');
+const keepAliveAgent = require('./KeepAliveAgent');
 
 const cache = new NodeCache();
 /*
@@ -20,6 +21,7 @@ request object
     body: json
     cacheKey: string / optional
     ttl: seconds
+    keepAlive: boolean / optional
     preCacheCallback: function(object) return for what to cache OR null to skip cache.
 }
 */
@@ -28,7 +30,7 @@ const executeRequest = async (object) => {
     let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null;
     if (cachedData) {
         if (object.Logger) {
-            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} skipped and using cache`);
+            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} skipped and using cache, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
         }
         return cachedData;
     }
@@ -46,12 +48,16 @@ const executeRequest = async (object) => {
         request.body = object.urlSearchParams
     }
 
+    if (object.keepAlive) {
+        request.agent = keepAliveAgent
+    }
+
     if (object.timeout !== undefined) {
         request.timeout = object.timeout;
     }
 
     if (object.Logger) {
-        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'}`);
+        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'}, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
     }
 
     let ret = {};
