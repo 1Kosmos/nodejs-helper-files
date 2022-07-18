@@ -20,6 +20,7 @@ request object
     body: json
     cacheKey: string / optional
     ttl: seconds
+    keepAlive: boolean / optional
     preCacheCallback: function(object) return for what to cache OR null to skip cache.
 }
 */
@@ -28,7 +29,7 @@ const executeRequest = async (object) => {
     let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null;
     if (cachedData) {
         if (object.Logger) {
-            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} skipped and using cache`);
+            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} skipped and using cache, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
         }
         return cachedData;
     }
@@ -46,12 +47,23 @@ const executeRequest = async (object) => {
         request.body = object.urlSearchParams
     }
 
+    if (object.keepAlive) {
+        const http = require("http");
+        const https = require("https");
+
+        const httpAgent = new http.Agent({ keepAlive: true });
+        const httpsAgent = new https.Agent({ keepAlive: true });
+
+        request.agent = (_parsedURL) =>
+          _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
+    }
+
     if (object.timeout !== undefined) {
         request.timeout = object.timeout;
     }
 
     if (object.Logger) {
-        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'}`);
+        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'}, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
     }
 
     let ret = {};
