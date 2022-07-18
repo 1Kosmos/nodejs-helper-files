@@ -9,6 +9,7 @@
 const fetch = require('node-fetch');
 const NodeCache = require('node-cache');
 const httpStatus = require('http-status');
+const keepAliveAgent = require('./KeepAliveAgent');
 
 const cache = new NodeCache();
 /*
@@ -48,14 +49,7 @@ const executeRequest = async (object) => {
     }
 
     if (object.keepAlive) {
-        const http = require("http");
-        const https = require("https");
-
-        const httpAgent = new http.Agent({ keepAlive: true });
-        const httpsAgent = new https.Agent({ keepAlive: true });
-
-        request.agent = (_parsedURL) =>
-          _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
+        request.agent = keepAliveAgent
     }
 
     if (object.timeout !== undefined) {
