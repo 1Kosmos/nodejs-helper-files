@@ -30,7 +30,7 @@ const executeRequest = async (object) => {
     let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null;
     if (cachedData) {
         if (object.Logger) {
-            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} skipped and using cache, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
+            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} skipped and using cache, with keep-alive ${object.keepAlive ? 'enabled' : 'disabled'}`);
         }
         return cachedData;
     }
@@ -57,7 +57,7 @@ const executeRequest = async (object) => {
     }
 
     if (object.Logger) {
-        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'}, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
+        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'}, with keep-alive ${object.keepAlive ? 'enabled' : 'disabled'}`);
     }
 
     let ret = {};
@@ -66,7 +66,7 @@ const executeRequest = async (object) => {
         ret.status = api_response.status;
         ret.text = await api_response.text();
         try {
-            ret.json = JSON.parse(ret.text);
+            ret.json = ret.text ? JSON.parse(ret.text) : ret.text;
         } catch (error) {
             ret.error = error;
             if (object.Logger) {
