@@ -65,6 +65,7 @@ const executeRequest = async (object) => {
     if (api_response) {
         ret.status = api_response.status;
         ret.text = await api_response.text();
+
         try {
             ret.json = JSON.parse(ret.text);
         } catch (error) {
@@ -85,7 +86,7 @@ const executeRequest = async (object) => {
     }
 
     if (object.cacheKey && ret.status == httpStatus.OK) {
-        if (object.preCacheCallback) {
+        if (object.preCacheCallback && object.preCacheCallback(ret) !== null ) {
             ret = object.preCacheCallback(ret);
         }
 
