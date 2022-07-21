@@ -85,7 +85,7 @@ const executeRequest = async (object) => {
     }
 
     if (object.cacheKey && ret.status == httpStatus.OK) {
-        if (object.preCacheCallback) {
+        if (object.preCacheCallback && object.preCacheCallback(ret) !== null) {
             ret = object.preCacheCallback(ret);
         }
 
