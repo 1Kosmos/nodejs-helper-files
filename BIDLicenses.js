@@ -38,33 +38,46 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
         return infraKey;
     }
 
-    let cacheKey = `${serviceUrl}/${licenseKey}`;
-
-    let pubicKeyUrl = `${serviceUrl}/publickeys`;
-    let publicKey = (await WTM.executeRequest({
-        method: 'get',
-        url: pubicKeyUrl,
-        Logger,
-        requestUID,
-        cacheKey: pubicKeyUrl,
-        ttl: 600
-    })).json.publicKey;
-
-    let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
-
     const requestId = JSON.stringify({
         ts: Math.round(new Date().getTime() / 1000),
         appid: senderId,
         uuid: requestUID
     });
 
-    const headers = {
-        licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-        requestid: BIDECDSA.encrypt(requestId, sharedKey),
-        publickey: myKeyPair.keyId
-    };
+    let headers;
+    let u1Route = false;
+    if (!myKeyPair) {
+        u1Route = true;
+        headers = {
+            licensekey: licenseKey,
+            requestid: requestId
+        };
 
-    let url = `${serviceUrl}/servicekey/current`;
+    }
+
+    let cacheKey = `${serviceUrl}/${licenseKey}`;
+
+    if (!u1Route) { 
+        let pubicKeyUrl = `${serviceUrl}/publickeys`;
+        let publicKey = (await WTM.executeRequest({
+            method: 'get',
+            url: pubicKeyUrl,
+            Logger,
+            requestUID,
+            cacheKey: pubicKeyUrl,
+            ttl: 600
+        })).json.publicKey;
+
+        let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
+
+        headers = {
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: BIDECDSA.encrypt(requestId, sharedKey),
+            publickey: myKeyPair.keyId
+        };    
+    }
+
+    let url = u1Route ? `${serviceUrl}/u1/servicekey/current` : `${serviceUrl}/servicekey/current`;
 
     Logger.info(`BIDLicenses - getCurrentLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
@@ -94,33 +107,46 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
         return infraKey;
     }
 
-    let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`;
-
-    let pubicKeyUrl = `${serviceUrl}/publickeys`;
-    let publicKey = (await WTM.executeRequest({
-        method: 'get',
-        url: pubicKeyUrl,
-        Logger,
-        requestUID,
-        cacheKey: pubicKeyUrl,
-        ttl: 600
-    })).json.publicKey;
-
-    let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
-
     const requestId = JSON.stringify({
         ts: Math.round(new Date().getTime() / 1000),
         appid: senderId,
         uuid: requestUID
     });
 
-    const headers = {
-        licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-        requestid: BIDECDSA.encrypt(requestId, sharedKey),
-        publickey: myKeyPair.keyId
-    };
+    let headers;
+    let u1Route = false;
+    if (!myKeyPair) {
+        u1Route = true;
+        headers = {
+            licensekey: licenseKey,
+            requestid: requestId
+        };
 
-    let url = `${serviceUrl}/community/${communityId}/licensecheck`;
+    }
+
+    let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`;
+
+    if (!u1Route) {
+        let pubicKeyUrl = `${serviceUrl}/publickeys`;
+        let publicKey = (await WTM.executeRequest({
+            method: 'get',
+            url: pubicKeyUrl,
+            Logger,
+            requestUID,
+            cacheKey: pubicKeyUrl,
+            ttl: 600
+        })).json.publicKey;
+
+        let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
+
+        headers = {
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: BIDECDSA.encrypt(requestId, sharedKey),
+            publickey: myKeyPair.keyId
+        };
+    }
+
+    let url = u1Route ? `${serviceUrl}/u1/community/${communityId}/licensecheck` : `${serviceUrl}/community/${communityId}/licensecheck`;
     Logger.info(`BIDLicenses - checkCommunityLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
