@@ -158,7 +158,7 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4()
 
     let url = `${serviceUrl}/u1/servicekey/current`;
 
-    Logger.info(`BIDLicenses - getU1CurrentLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - "${senderId}" invokes getU1CurrentLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
@@ -195,7 +195,7 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
     let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`;
 
     let url = `${serviceUrl}/u1/community/${communityId}/licensecheck`;
-    Logger.info(`BIDLicenses - checkU1CommunityLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - "${senderId}" invokes checkU1CommunityLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
