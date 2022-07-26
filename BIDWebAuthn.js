@@ -7,55 +7,14 @@
  */
 "use strict";
 const { v4: uuidv4 } = require('uuid');
-const NodeCache = require('node-cache');
-const BIDECDSA = require('./BIDECDSA');
 const fetch = require('node-fetch');
 const BIDTenant = require('./BIDTenant');
-
-const cache = new NodeCache({ stdTTL: 10 * 60 });
-
-const getPublickey = async (tenantInfo) => {
-  try {
-    const sd = await BIDTenant.getSD(tenantInfo);
-
-    let pkCache = cache.get(sd.webauthn + "/publickeys");
-
-    if (pkCache) {
-      return pkCache;
-    }
-
-    let headers = {
-      'Content-Type': 'application/json',
-      'charset': 'utf-8',
-    }
-
-    let api_response = await fetch(sd.webauthn + "/publickeys", {
-      method: 'get',
-      headers: headers
-    });
-
-    let ret = null;
-    if (api_response) {
-      api_response = await api_response.json();
-      ret = api_response.publicKey;
-      cache.set(sd.webauthn + "/publickeys", ret);
-    }
-
-    return ret;
-  } catch (error) {
-    throw error;
-  }
-}
 
 const fetchAttestationOptions = async (tenantInfo, optionsRequest) => {
   try {
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
-    const keySet = BIDTenant.getKeySet();
     const licenseKey = tenantInfo.licenseKey;
     const sd = await BIDTenant.getSD(tenantInfo);
-
-    const waPublicKey = await getPublickey(tenantInfo);
-    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, waPublicKey);
 
     let req = {
       ...optionsRequest,
@@ -63,36 +22,22 @@ const fetchAttestationOptions = async (tenantInfo, optionsRequest) => {
       tenantId: communityInfo.tenant.id
     }
 
-    let reqBody = {
-      data: BIDECDSA.encrypt(JSON.stringify(req), sharedKey)
-    }
-
-    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-      ts: Math.round(new Date().getTime() / 1000),
-      appid: 'fixme',
-      uuid: uuidv4()
-    }), sharedKey);
-
     let headers = {
       'Content-Type': 'application/json',
       'charset': 'utf-8',
-      publickey: keySet.pKey,
-      licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-      requestid: encryptedRequestId
+
+      licensekey: licenseKey,
+      requestid: uuidv4()
     }
 
-    let api_respose = await fetch(sd.webauthn + "/attestation/options", {
+    let api_respose = await fetch(sd.webauthn + "/u1/attestation/options", {
       method: 'post',
-      body: JSON.stringify(reqBody),
+      body: JSON.stringify(req),
       headers: headers
     });
 
     if (api_respose) {
       api_respose = await api_respose.json();
-      if (api_respose.data) {
-        let dec_data = BIDECDSA.decrypt(api_respose.data, sharedKey);
-        api_respose = JSON.parse(dec_data);
-      }
     }
 
     return api_respose;
@@ -104,12 +49,8 @@ const fetchAttestationOptions = async (tenantInfo, optionsRequest) => {
 const submitAttestationResult = async (tenantInfo, resultRequest) => {
   try {
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
-    const keySet = BIDTenant.getKeySet();
     const licenseKey = tenantInfo.licenseKey;
     const sd = await BIDTenant.getSD(tenantInfo);
-
-    const waPublicKey = await getPublickey(tenantInfo);
-    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, waPublicKey);
 
     let req = {
       ...resultRequest,
@@ -117,36 +58,21 @@ const submitAttestationResult = async (tenantInfo, resultRequest) => {
       tenantId: communityInfo.tenant.id
     }
 
-    let reqBody = {
-      data: BIDECDSA.encrypt(JSON.stringify(req), sharedKey)
-    }
-
-    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-      ts: Math.round(new Date().getTime() / 1000),
-      appid: 'fixme',
-      uuid: uuidv4()
-    }), sharedKey);
-
     let headers = {
       'Content-Type': 'application/json',
       'charset': 'utf-8',
-      publickey: keySet.pKey,
-      licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-      requestid: encryptedRequestId
+      licensekey: licenseKey,
+      requestid: uuidv4()
     }
 
-    let api_respose = await fetch(sd.webauthn + "/attestation/result", {
+    let api_respose = await fetch(sd.webauthn + "/u1/attestation/result", {
       method: 'post',
-      body: JSON.stringify(reqBody),
+      body: JSON.stringify(req),
       headers: headers
     });
 
     if (api_respose) {
       api_respose = await api_respose.json();
-      if (api_respose.data) {
-        let dec_data = BIDECDSA.decrypt(api_respose.data, sharedKey);
-        api_respose = JSON.parse(dec_data);
-      }
     }
 
     return api_respose;
@@ -158,12 +84,8 @@ const submitAttestationResult = async (tenantInfo, resultRequest) => {
 const fetchAssertionOptions = async (tenantInfo, optionsRequest) => {
   try {
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
-    const keySet = BIDTenant.getKeySet();
     const licenseKey = tenantInfo.licenseKey;
     const sd = await BIDTenant.getSD(tenantInfo);
-
-    const waPublicKey = await getPublickey(tenantInfo);
-    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, waPublicKey);
 
     let req = {
       ...optionsRequest,
@@ -171,36 +93,22 @@ const fetchAssertionOptions = async (tenantInfo, optionsRequest) => {
       tenantId: communityInfo.tenant.id
     }
 
-    let reqBody = {
-      data: BIDECDSA.encrypt(JSON.stringify(req), sharedKey)
-    }
-
-    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-      ts: Math.round(new Date().getTime() / 1000),
-      appid: 'fixme',
-      uuid: uuidv4()
-    }), sharedKey);
-
     let headers = {
       'Content-Type': 'application/json',
       'charset': 'utf-8',
-      publickey: keySet.pKey,
-      licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-      requestid: encryptedRequestId
+
+      licensekey: licenseKey,
+      requestid: uuidv4()
     }
 
-    let api_respose = await fetch(sd.webauthn + "/assertion/options", {
+    let api_respose = await fetch(sd.webauthn + "/u1/assertion/options", {
       method: 'post',
-      body: JSON.stringify(reqBody),
+      body: JSON.stringify(req),
       headers: headers
     });
 
     if (api_respose) {
       api_respose = await api_respose.json();
-      if (api_respose.data) {
-        let dec_data = BIDECDSA.decrypt(api_respose.data, sharedKey);
-        api_respose = JSON.parse(dec_data);
-      }
     }
 
     return api_respose;
@@ -212,12 +120,8 @@ const fetchAssertionOptions = async (tenantInfo, optionsRequest) => {
 const submitAssertionResult = async (tenantInfo, resultRequest) => {
   try {
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
-    const keySet = BIDTenant.getKeySet();
     const licenseKey = tenantInfo.licenseKey;
     const sd = await BIDTenant.getSD(tenantInfo);
-
-    const waPublicKey = await getPublickey(tenantInfo);
-    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, waPublicKey);
 
     let req = {
       ...resultRequest,
@@ -225,36 +129,21 @@ const submitAssertionResult = async (tenantInfo, resultRequest) => {
       tenantId: communityInfo.tenant.id
     }
 
-    let reqBody = {
-      data: BIDECDSA.encrypt(JSON.stringify(req), sharedKey)
-    }
-
-    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-      ts: Math.round(new Date().getTime() / 1000),
-      appid: 'fixme',
-      uuid: uuidv4()
-    }), sharedKey);
-
     let headers = {
       'Content-Type': 'application/json',
       'charset': 'utf-8',
-      publickey: keySet.pKey,
-      licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-      requestid: encryptedRequestId
+      licensekey: licenseKey,
+      requestid: uuidv4()
     }
 
-    let api_respose = await fetch(sd.webauthn + "/assertion/result", {
+    let api_respose = await fetch(sd.webauthn + "/u1/assertion/result", {
       method: 'post',
-      body: JSON.stringify(reqBody),
+      body: JSON.stringify(req),
       headers: headers
     });
 
     if (api_respose) {
       api_respose = await api_respose.json();
-      if (api_respose.data) {
-        let dec_data = BIDECDSA.decrypt(api_respose.data, sharedKey);
-        api_respose = JSON.parse(dec_data);
-      }
     }
 
     return api_respose;
@@ -264,7 +153,6 @@ const submitAssertionResult = async (tenantInfo, resultRequest) => {
 }
 
 module.exports = {
-  getPublickey,
   fetchAttestationOptions,
   submitAttestationResult,
   fetchAssertionOptions,
