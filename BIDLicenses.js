@@ -142,7 +142,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
             let allowed = preCacheResult.json.isAuthorized && moment(preCacheResult.json.expiry) > moment.now();
             return allowed ? preCacheResult : null;
         }
-    })).json;
+    }));
 
     if (ret && ret.json && ret.json.isAuthorized === true) {
         return ret.json;
