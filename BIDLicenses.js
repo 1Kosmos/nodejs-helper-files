@@ -11,6 +11,8 @@ const moment = require('moment');
 const sha512 = require('js-sha512');
 
 const WTM = require('./WTM');
+const httpStatus = require('http-status');
+
 const BIDECDSA = require('./BIDECDSA');
 
 const makeInfraKey = () => {
@@ -82,7 +84,11 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
         }
     })).json;
 
-    return ret;
+    if (ret && ret.disabled === false && ret.keySecret === licenseKey) {
+        return ret;
+    }
+    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License', response: ret });
+
 };
 
 const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
@@ -138,7 +144,10 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
         }
     })).json;
 
-    return ret;
+    if (ret && ret.isAuthorized === true) {
+        return ret;
+    }
+    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License', response: ret });
 };
 
 const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4(), senderId, Logger) => {
@@ -174,7 +183,11 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4()
         }
     })).json;
 
-    return ret;
+    if (ret && ret.disabled === false && ret.keySecret === licenseKey) {
+        return ret;
+    }
+    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License', response: ret });
+
 };
 
 const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requestUID = uuidv4(), senderId, Logger) => {
@@ -212,7 +225,10 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
         }
     })).json;
 
-    return ret;
+    if (ret && ret.isAuthorized === true) {
+        return ret;
+    }
+    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License', response: ret });
 };
 
 module.exports = {
