@@ -82,12 +82,12 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
             let allowed = preCacheResult.json.keySecret === licenseKey && !preCacheResult.json.disabled && moment(preCacheResult.json.expiry) > moment.now();
             return allowed ? preCacheResult : null;
         }
-    })).json;
+    }));
 
-    if (ret && ret.disabled === false && ret.keySecret === licenseKey) {
-        return ret;
+    if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
+        return ret.json;
     }
-    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License', response: ret });
+    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' });
 
 };
 
@@ -144,10 +144,10 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
         }
     })).json;
 
-    if (ret && ret.isAuthorized === true) {
-        return ret;
+    if (ret && ret.json && ret.json.isAuthorized === true) {
+        return ret.json;
     }
-    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License', response: ret });
+    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' });
 };
 
 const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4(), senderId, Logger) => {
@@ -181,12 +181,12 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4()
             let allowed = preCacheResult.json.keySecret === licenseKey && !preCacheResult.json.disabled && moment(preCacheResult.json.expiry) > moment.now();
             return allowed ? preCacheResult : null;
         }
-    })).json;
+    }));
 
-    if (ret && ret.disabled === false && ret.keySecret === licenseKey) {
-        return ret;
+    if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
+        return ret.json;
     }
-    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License', response: ret });
+    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' });
 
 };
 
@@ -223,12 +223,12 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
             let allowed = preCacheResult.json.isAuthorized && moment(preCacheResult.json.expiry) > moment.now();
             return allowed ? preCacheResult : null;
         }
-    })).json;
+    }));
 
-    if (ret && ret.isAuthorized === true) {
-        return ret;
+    if (ret && ret.json && ret.json.isAuthorized === true) {
+        return ret.json;
     }
-    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License', response: ret });
+    return reject({ code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'});
 };
 
 module.exports = {
