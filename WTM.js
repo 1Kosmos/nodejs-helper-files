@@ -52,6 +52,10 @@ const executeRequest = async (object) => {
         request.agent = keepAliveAgent
     }
 
+    if (object.agent) {
+        request.agent = object.agent
+    }
+
     if (object.timeout !== undefined) {
         request.timeout = object.timeout;
     }
