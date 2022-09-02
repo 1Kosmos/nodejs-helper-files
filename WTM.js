@@ -72,7 +72,7 @@ const executeRequest = async (object) => {
         try {
             ret.json = JSON.parse(ret.text);
         } catch (error) {
-            ret.error = error;
+            //ret.error = error; //MK: SEP/2 this is not supposed to be an error
             if (object.Logger) {
                 object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
             }
