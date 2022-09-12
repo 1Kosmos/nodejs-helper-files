@@ -11,6 +11,8 @@ const moment = require('moment');
 const sha512 = require('js-sha512');
 
 const WTM = require('./WTM');
+const httpStatus = require('http-status');
+
 const BIDECDSA = require('./BIDECDSA');
 
 const makeInfraKey = () => {
@@ -80,9 +82,13 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
             let allowed = preCacheResult.json.keySecret === licenseKey && !preCacheResult.json.disabled && moment(preCacheResult.json.expiry) > moment.now();
             return allowed ? preCacheResult : null;
         }
-    })).json;
+    }));
 
-    return ret;
+    if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
+        return ret.json;
+    }
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+
 };
 
 const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
@@ -136,13 +142,99 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
             let allowed = preCacheResult.json.isAuthorized && moment(preCacheResult.json.expiry) > moment.now();
             return allowed ? preCacheResult : null;
         }
-    })).json;
+    }));
 
-    return ret;
+    if (ret && ret.json && ret.json.isAuthorized === true) {
+        return ret.json;
+    }
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+};
+
+const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4(), senderId, Logger) => {
+
+    const infraKey = makeInfraKey();
+    if (infraKey && infraKey.keySecret === licenseKey) {
+        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        return infraKey;
+    }
+
+    const headers = {
+        licensekey: licenseKey,
+        requestid: requestUID
+    };
+
+    let cacheKey = `${serviceUrl}/${licenseKey}`;
+
+    let url = `${serviceUrl}/u1/servicekey/current`;
+
+    Logger.info(`BIDLicenses - "${senderId}" invokes getU1CurrentLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+
+    let ret = (await WTM.executeRequest({
+        method: 'get',
+        url: url,
+        Logger,
+        requestUID,
+        headers: headers,
+        cacheKey: cacheKey,
+        ttl: 600,
+        preCacheCallback: function (preCacheResult) {
+            let allowed = preCacheResult.json.keySecret === licenseKey && !preCacheResult.json.disabled && moment(preCacheResult.json.expiry) > moment.now();
+            return allowed ? preCacheResult : null;
+        }
+    }));
+
+    if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
+        return ret.json;
+    }
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+
+};
+
+const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requestUID = uuidv4(), senderId, Logger) => {
+
+    const infraKey = makeInfraKey();
+    if (infraKey && infraKey.keySecret === licenseKey) {
+        Logger.info(`BIDLicenses - checkU1CommunityLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        infraKey.isAuthorized = true;
+        return infraKey;
+    }
+
+    let headers;
+    headers = {
+        licensekey: licenseKey, 
+        requestid: requestUID
+    };
+
+    let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`;
+
+    let url = `${serviceUrl}/u1/community/${communityId}/licensecheck`;
+    Logger.info(`BIDLicenses - "${senderId}" invokes checkU1CommunityLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+
+    let ret = (await WTM.executeRequest({
+        method: 'get',
+        url: url,
+        Logger,
+        requestUID,
+        headers: headers,
+        cacheKey: cacheKey,
+        ttl: 600,
+        preCacheCallback: function (preCacheResult) {
+            preCacheResult.json.keySecret = licenseKey;
+            let allowed = preCacheResult.json.isAuthorized && moment(preCacheResult.json.expiry) > moment.now();
+            return allowed ? preCacheResult : null;
+        }
+    }));
+
+    if (ret && ret.json && ret.json.isAuthorized === true) {
+        return ret.json;
+    }
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
 };
 
 module.exports = {
     makeInfraKey,
     getCurrentLicense,
-    checkCommunityLicense
+    checkCommunityLicense,
+    getU1CurrentLicense,
+    checkU1CommunityLicense    
 };
