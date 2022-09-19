@@ -31,28 +31,28 @@ npm install
 ```
 const BIDOTP = require('blockid-nodejs-helpers/BIDOTP');
 
-let otpResponse = await BIDOTP.requestOTP({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<username>", "<emailToOrNull>", "<smsToOrNull>", "<smsISDCodeOrNull>");
+let otpResponse = await BIDOTP.requestOTP({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, "<username>", "<emailToOrNull>", "<smsToOrNull>", "<smsISDCodeOrNull>");
 ```
 
 - Verify OTP
 ```
 const BIDOTP = require('blockid-nodejs-helpers/BIDOTP');
 
-let verifyOtpResponse = await BIDOTP.verifyOTP({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<username>", "<otpcode>");
+let verifyOtpResponse = await BIDOTP.verifyOTP({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, "<username>", "<otpcode>");
 ```
 
 - Create new UWL2.0 session
 ```
 const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
 
-let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<authType>", "<scopes>");
+let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, "<authType>", "<scopes>");
 ```
 
 - Poll for UWL2.0 session response
 ```
 const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
 
-let authSessionRespone = await BIDSessions.pollSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>", true, true);
+let authSessionRespone = await BIDSessions.pollSession({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, "<sessionId>", true, true);
 ```
 
 - FIDO device registration options
@@ -76,7 +76,7 @@ const BIDWebAuthn = require('blockid-nodejs-helpers/BIDWebAuthn.js');
 // if your device is a MacBook
 'attestation': 'none'
 
-let attestationOptionsResponse = await ​BIDWebAuthn.fetchAttestationOptions({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, {
+let attestationOptionsResponse = await ​BIDWebAuthn.fetchAttestationOptions({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, {
     "displayName":"<displayname>",
     "username":"<username>",
     "dns":"<current domain>",
@@ -89,7 +89,7 @@ let attestationOptionsResponse = await ​BIDWebAuthn.fetchAttestationOptions({ 
 ```
 const BIDWebAuthn = require('blockid-nodejs-helpers/BIDWebAuthn.js');
 
-let attestationResultResponse = await BIDWebAuthn.submitAttestationResult({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, {
+let attestationResultResponse = await BIDWebAuthn.submitAttestationResult({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, {
     "rawId": <rawId>,
     "response": {
       "attestationObject": "<attestationObject>",
@@ -111,7 +111,7 @@ let attestationResultResponse = await BIDWebAuthn.submitAttestationResult({ "dns
 ```
 const BIDWebAuthn = require('blockid-nodejs-helpers/BIDWebAuthn.js');
 
-let assertionOptionsResponse = await BIDWebAuthn.fetchAssertionOptions({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, {
+let assertionOptionsResponse = await BIDWebAuthn.fetchAssertionOptions({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, {
   "username": "<username>",
   "displayName": "<displayName>",
   "dns": "<current domain>",
@@ -123,7 +123,7 @@ let assertionOptionsResponse = await BIDWebAuthn.fetchAssertionOptions({ "dns": 
 ```
 const BIDWebAuthn = require('blockid-nodejs-helpers/BIDWebAuthn.js');
 
-let assertionResultResponse = await BIDWebAuthn.submitAssertionResult({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, {
+let assertionResultResponse = await BIDWebAuthn.submitAssertionResult({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, {
     "rawId": "<rawId>",
     "response": {
         "authenticatorData": "<authenticatorData>",
@@ -142,7 +142,7 @@ let assertionResultResponse = await BIDWebAuthn.submitAssertionResult({ "dns": "
 ```
 const BIDVerifyDocument = require('blockid-nodejs-helpers/BIDVerifyDocument');
 
-let createdSessionResponse = await BIDVerifyDocument.createDocumentSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<dvcId>", "<documentType>");
+let createdSessionResponse = await BIDVerifyDocument.createDocumentSession({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, "<dvcId>", "<documentType>");
     
 ```
 
@@ -150,26 +150,26 @@ let createdSessionResponse = await BIDVerifyDocument.createDocumentSession({ "dn
 ```
 const BIDMessaging = require('blockid-nodejs-helpers/BIDMessaging');
 
-let smsResponse = await BIDMessaging.sendSMS({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<smsTo>", "<smsISDCode>", "<smsTemplateB64>");
+let smsResponse = await BIDMessaging.sendSMS({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, "<smsTo>", "<smsISDCode>", "<smsTemplateB64>");
 ```
 
 - Poll for Driver's License session response
 ```
 const BIDVerifyDocument = require('blockid-nodejs-helpers/BIDVerifyDocument');
 
-let pollSessionResponse = await BIDVerifyDocument.pollSessionResult({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<dvcId>", "<sessionId>");
+let pollSessionResponse = await BIDVerifyDocument.pollSessionResult({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, "<dvcId>", "<sessionId>");
 ```
 
 - Request Email verification link
 ```
 const BIDAccessCodes = require('blockid-nodejs-helpers/BIDAccessCodes');
 
-const requestEmailVerificationResponse = await BIDAccessCodes.requestEmailVerificationLink({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<emailTo>", "<emailTemplateB64>", "<emailSubject>", "<ttl_seconds>");
+const requestEmailVerificationResponse = await BIDAccessCodes.requestEmailVerificationLink({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, "<emailTo>", "<emailTemplateB64>", "<emailSubject>", "<ttl_seconds>");
 ```
 
 - Verify and Redeem Email verification link
 ```
 const BIDAccessCodes = require('blockid-nodejs-helpers/BIDAccessCodes');
 
-let redeemVerificationCodeResponse = await BIDAccessCodes.verifyAndRedeemEmailVerificationCode({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>");
+let redeemVerificationCodeResponse = await BIDAccessCodes.verifyAndRedeemEmailVerificationCode({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, "<sessionId>");
 ```
