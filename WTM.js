@@ -12,21 +12,31 @@ const httpStatus = require('http-status');
 const keepAliveAgent = require('./KeepAliveAgent');
 
 const cache = new NodeCache();
-/*
-request object 
-{
-    method: get/put/post/delete/patch
-    url
-    headers: {k:v}
-    body: json
-    cacheKey: string / optional
-    ttl: seconds
-    keepAlive: boolean / optional
-    preCacheCallback: function(object) return for what to cache OR null to skip cache.
-}
-*/
-const executeRequest = async (object) => {
 
+/**
+ * @typedef LoggerType
+ * @type {Object}
+ * @property {function(string): void} info
+ * 
+ * @typedef RequestObject
+ * @type {Object}
+ * @property {string} url                                           - URL to call
+ * @property {('get'|'put'|'post'|'delete'|'patch')} method         - Request method
+ * @property {Object} [body]                                        - Request body (optional)
+ * @property {Object} [urlSearchParams]                             - Url search params (optional)
+ * @property {Object} [headers]                                     - Request headers (optional)
+ * @property {boolean} [keepAlive]                                  - Keep alive connection flag - if specified, WTM will keep connection (optional)
+ * @property {string} [cacheKey]                                    - Cache key - if specified, WTM will cache response (optional)
+ * @property {number} [ttl]                                         - Cache expiry time in seconds (optional)
+ * @property {LoggerType} [Logger]                                  - Logger object (optional)
+ * @property {string} [requestUID]                                  - Request UID for logging (optional)
+ * @property {function(*): void} [preCacheCallback]                 - Pre cache callback - if specified, WTM will call this function with response and cache returned value (optional)
+ * @property {number} [timeout]                                     - Timeout - in seconds, if specified request will timeout after this time (optional)
+ * 
+ * @param {RequestObject} object 
+ * @returns {Promise<void>}
+ */
+const executeRequest = async (object) => {
     let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null;
     if (cachedData) {
         if (object.Logger) {
@@ -56,8 +66,12 @@ const executeRequest = async (object) => {
         request.agent = object.agent
     }
 
+    let timeoutId;
     if (object.timeout !== undefined) {
-        request.timeout = object.timeout;
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), object.timeout * 1000);
+
+        request.signal = controller.signal;
     }
 
     if (object.Logger) {
@@ -77,6 +91,10 @@ const executeRequest = async (object) => {
                 object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
             }
         }
+    }
+
+    if (timeoutId) {
+        clearTimeout(timeoutId);
     }
 
     const responseStatus = [
