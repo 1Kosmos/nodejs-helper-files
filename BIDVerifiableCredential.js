@@ -92,7 +92,7 @@ const issueVerifiableCredentials = async (tenantInfo, type, document) => {
     }
 }
 
-const verifyVerifiableCredentials = async (tenantInfo, issuedVerifiableCredentials) => {
+const verifyVerifiableCredentials = async (tenantInfo, issuedVerifiableCredential) => {
     try {
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
         const keySet = BIDTenant.getKeySet();
@@ -122,7 +122,7 @@ const verifyVerifiableCredentials = async (tenantInfo, issuedVerifiableCredentia
             url: sd.vcs + "/tenant/" + communityInfo.tenant.id + "/community/" + communityInfo.community.id + "/verify/vc",
             headers,
             body: {
-                vc: issuedVerifiableCredentials
+                vc: issuedVerifiableCredential
             }
         });
 
