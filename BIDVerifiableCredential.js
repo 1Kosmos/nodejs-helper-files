@@ -55,7 +55,7 @@ const issueVerifiableCredentials = async (tenantInfo, type, document) => {
         const sd = await BIDTenant.getSD(tenantInfo);
 
         let sessionsPublicKey = await getVcsPublicKey(tenantInfo);
-        
+
         let userDid = uuidv4();
 
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
@@ -84,11 +84,8 @@ const issueVerifiableCredentials = async (tenantInfo, type, document) => {
             }
         });
 
-        let status = api_response.status;
-
         api_response = api_response.json;
 
-        api_response.status = status;
         return api_response;
     } catch (error) {
         throw error;
