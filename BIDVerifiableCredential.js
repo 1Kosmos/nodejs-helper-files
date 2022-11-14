@@ -10,7 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 const NodeCache = require('node-cache');
 const BIDECDSA = require('./BIDECDSA');
 const BIDTenant = require('./BIDTenant');
-const fetch = require('node-fetch');
+const WTM = require('./WTM');
 
 const cache = new NodeCache({ stdTTL: 10 * 60 });
 
@@ -29,14 +29,12 @@ const getVcsPublicKey = async (tenantInfo) => {
             'charset': 'utf-8',
         }
 
-        let api_response = await fetch(sd.vcs + "/publickeys", {
-            method: 'get',
-            headers: headers
-        });
-
+        let url = `${sd.vcs}/publickeys`;
+        let api_response = await WTM.executeRequest({ method: 'get', url, headers});
+        
         let ret = null;
         if (api_response) {
-            api_response = await api_response.json();
+            api_response = api_response.json;
             ret = api_response.publicKey;
             cache.set(sd.vcs + "/publickeys", ret);
         }
@@ -60,11 +58,6 @@ const issueVerifiableCredentials = async (tenantInfo, type, document) => {
         
         let userDid = uuidv4();
 
-        let req = {
-            document,
-            did: userDid
-        }
-
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
 
         const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
@@ -81,17 +74,19 @@ const issueVerifiableCredentials = async (tenantInfo, type, document) => {
             requestid: encryptedRequestId
         }
 
-        let api_response = await fetch(sd.vcs + "/tenant/" + communityInfo.tenant.id + "/community/" + communityInfo.community.id + "/vc/from/document/" + type, {
+        let api_response = await WTM.executeRequest({
             method: 'post',
-            body: JSON.stringify(req),
-            headers: headers
+            url: sd.vcs + "/tenant/" + communityInfo.tenant.id + "/community/" + communityInfo.community.id + "/vc/from/document/" + type,
+            headers,
+            body: {
+                document,
+                did: userDid
+            }
         });
 
         let status = api_response.status;
 
-        if (api_response) {
-            api_response = await api_response.json();
-        }
+        api_response = api_response.json;
 
         api_response.status = status;
         return api_response;
