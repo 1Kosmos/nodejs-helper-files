@@ -55,7 +55,7 @@ const issueVerifiableCredentials = async (tenantInfo, type, document) => {
         const sd = await BIDTenant.getSD(tenantInfo);
 
         let sessionsPublicKey = await getVcsPublicKey(tenantInfo);
-        
+
         let userDid = uuidv4();
 
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
