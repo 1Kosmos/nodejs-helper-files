@@ -30,7 +30,7 @@ const executeRequest = async (object) => {
     let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null;
     if (cachedData) {
         if (object.Logger) {
-            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} skipped and using cache, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
+            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? JSON.stringify(object.requestUID) : 'n/a'} skipped and using cache, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
         }
         return cachedData;
     }
@@ -61,7 +61,7 @@ const executeRequest = async (object) => {
     }
 
     if (object.Logger) {
-        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'}, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
+        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestUID ? JSON.stringify(object.requestUID) : 'n/a'}, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
     }
 
     let ret = {};
@@ -74,7 +74,7 @@ const executeRequest = async (object) => {
         } catch (error) {
             //ret.error = error; //MK: SEP/2 this is not supposed to be an error
             if (object.Logger) {
-                object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
+                object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? JSON.stringify(object.requestUID) : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
             }
         }
     }
@@ -85,7 +85,7 @@ const executeRequest = async (object) => {
         httpStatus.INTERNAL_SERVER_ERROR
     ]
     if (responseStatus.includes(ret.status) && object.Logger) {
-        object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
+        object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? JSON.stringify(object.requestUID) : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
     }
 
     if (object.cacheKey && ret.status == httpStatus.OK) {

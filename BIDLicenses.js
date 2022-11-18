@@ -36,7 +36,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
 
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         return infraKey;
     }
 
@@ -57,7 +57,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
     const requestId = JSON.stringify({
         ts: Math.round(new Date().getTime() / 1000),
         appid: senderId,
-        uuid: requestUID
+        uuid: requestUID.uuid
     });
 
     const headers = {
@@ -68,7 +68,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
 
     let url = `${serviceUrl}/servicekey/current`;
 
-    Logger.info(`BIDLicenses - getCurrentLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - getCurrentLicense calling WTM for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
@@ -95,7 +95,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
 
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`BIDLicenses - checkCommunityLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - checkCommunityLicense for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         infraKey.isAuthorized = true;
         return infraKey;
     }
@@ -117,7 +117,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     const requestId = JSON.stringify({
         ts: Math.round(new Date().getTime() / 1000),
         appid: senderId,
-        uuid: requestUID
+        uuid: requestUID.uuid
     });
 
     const headers = {
@@ -127,7 +127,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     };
 
     let url = `${serviceUrl}/community/${communityId}/licensecheck`;
-    Logger.info(`BIDLicenses - checkCommunityLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - checkCommunityLicense calling WTM for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
@@ -154,7 +154,7 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4()
 
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         return infraKey;
     }
 
@@ -167,7 +167,7 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4()
 
     let url = `${serviceUrl}/u1/servicekey/current`;
 
-    Logger.info(`BIDLicenses - "${senderId}" invokes getU1CurrentLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - "${senderId}" invokes getU1CurrentLicense calling WTM for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
@@ -194,7 +194,7 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
 
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`BIDLicenses - checkU1CommunityLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - checkU1CommunityLicense for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         infraKey.isAuthorized = true;
         return infraKey;
     }
@@ -208,7 +208,7 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
     let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`;
 
     let url = `${serviceUrl}/u1/community/${communityId}/licensecheck`;
-    Logger.info(`BIDLicenses - "${senderId}" invokes checkU1CommunityLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - "${senderId}" invokes checkU1CommunityLicense calling WTM for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
