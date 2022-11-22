@@ -53,14 +53,14 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
 
     let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
 
-    const requestId = JSON.stringify(requestID);
+    const requestId = requestID;
     requestId.ts = Math.round(new Date().getTime() / 1000)
     requestId.uuid = requestID.uuid ? requestID.uuid : uuidv4()
     requestId.appid = senderId
 
     const headers = {
         licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-        requestid: BIDECDSA.encrypt(requestId, sharedKey),
+        requestid: BIDECDSA.encrypt(JSON.stringify(requestId), sharedKey),
         publickey: myKeyPair.keyId
     };
 
@@ -111,14 +111,14 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
 
     let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
 
-    const requestId = JSON.stringify(requestID);
+    const requestId = requestID;
     requestId.uuid = requestID.uuid ? requestID.uuid : uuidv4()
     requestId.appid = senderId
     requestId.ts = Math.round(new Date().getTime() / 1000)
 
     const headers = {
         licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-        requestid: BIDECDSA.encrypt(requestId, sharedKey),
+        requestid: BIDECDSA.encrypt(JSON.stringify(requestId), sharedKey),
         publickey: myKeyPair.keyId
     };
 
