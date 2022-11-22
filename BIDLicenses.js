@@ -32,8 +32,8 @@ const makeInfraKey = () => {
     return null;
 };
 
-const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
-
+const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID, senderId, Logger) => {
+    const requestUUID = requestUID.uuid ? requestUID.uuid : uuidv4()
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
         Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
@@ -57,7 +57,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
     const requestId = JSON.stringify({
         ts: Math.round(new Date().getTime() / 1000),
         appid: senderId,
-        uuid: requestUID.uuid
+        uuid: requestUUID
     });
 
     const headers = {
@@ -91,8 +91,8 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
 
 };
 
-const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
-
+const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestUID, senderId, Logger) => {
+    const requestUUID = requestUID.uuid ? requestUID.uuid : uuidv4()
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
         Logger.info(`BIDLicenses - checkCommunityLicense for requestId: ${requestUID ? JSON.stringify(requestUID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
@@ -117,7 +117,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     const requestId = JSON.stringify({
         ts: Math.round(new Date().getTime() / 1000),
         appid: senderId,
-        uuid: requestUID.uuid
+        uuid: requestUUID
     });
 
     const headers = {
