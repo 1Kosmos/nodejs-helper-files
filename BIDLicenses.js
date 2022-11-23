@@ -39,6 +39,13 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
         return infraKey;
     }
 
+    if (!requestID || (requestID && !requestID.uuid)) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'RequestId is required.' };
+    }
+    if (!senderId) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'senderId is required.' };
+    }
+    
     let cacheKey = `${serviceUrl}/${licenseKey}`;
 
     let pubicKeyUrl = `${serviceUrl}/publickeys`;
@@ -46,7 +53,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
         method: 'get',
         url: pubicKeyUrl,
         Logger,
-        requestUID: requestID,
+        requestID,
         cacheKey: pubicKeyUrl,
         ttl: 600
     })).json.publicKey;
@@ -55,7 +62,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
 
     const requestId = requestID;
     requestId.ts = Math.round(new Date().getTime() / 1000)
-    requestId.uuid = requestID.uuid ? requestID.uuid : uuidv4()
+    requestId.uuid = requestID.uuid
     requestId.appid = senderId
 
     const headers = {
@@ -72,7 +79,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
         method: 'get',
         url: url,
         Logger,
-        requestUID: requestID,
+        requestID,
         headers: headers,
         cacheKey: cacheKey,
         ttl: 600,
@@ -85,8 +92,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
     if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
-
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 };
 
 const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestID, senderId, Logger) => {
@@ -96,6 +102,12 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
         infraKey.isAuthorized = true;
         return infraKey;
     }
+    if (!requestID || (requestID && !requestID.uuid)) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'RequestId is required.' };
+    }
+    if (!senderId) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'senderId is required.' };
+    }
 
     let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`;
 
@@ -104,7 +116,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
         method: 'get',
         url: pubicKeyUrl,
         Logger,
-        requestUID: requestID,
+        requestID,
         cacheKey: pubicKeyUrl,
         ttl: 600
     })).json.publicKey;
@@ -112,7 +124,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
 
     const requestId = requestID;
-    requestId.uuid = requestID.uuid ? requestID.uuid : uuidv4()
+    requestId.uuid = requestID.uuid
     requestId.appid = senderId
     requestId.ts = Math.round(new Date().getTime() / 1000)
 
@@ -129,7 +141,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
         method: 'get',
         url: url,
         Logger,
-        requestUID: requestID,
+        requestID,
         headers: headers,
         cacheKey: cacheKey,
         ttl: 600,
@@ -143,7 +155,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     if (ret && ret.json && ret.json.isAuthorized === true) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 };
 
 const getU1CurrentLicense = async (licenseKey, serviceUrl, requestID = uuidv4(), senderId, Logger) => {
@@ -169,7 +181,7 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestID = uuidv4(),
         method: 'get',
         url: url,
         Logger,
-        requestUID: requestID,
+        requestID,
         headers: headers,
         cacheKey: cacheKey,
         ttl: 600,
@@ -182,7 +194,7 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestID = uuidv4(),
     if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 
 };
 
@@ -197,7 +209,7 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
 
     let headers;
     headers = {
-        licensekey: licenseKey, 
+        licensekey: licenseKey,
         requestid: requestID
     };
 
@@ -210,7 +222,7 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
         method: 'get',
         url: url,
         Logger,
-        requestUID: requestID,
+        requestID,
         headers: headers,
         cacheKey: cacheKey,
         ttl: 600,
@@ -224,7 +236,7 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
     if (ret && ret.json && ret.json.isAuthorized === true) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 };
 
 module.exports = {
@@ -232,5 +244,5 @@ module.exports = {
     getCurrentLicense,
     checkCommunityLicense,
     getU1CurrentLicense,
-    checkU1CommunityLicense    
+    checkU1CommunityLicense
 };
