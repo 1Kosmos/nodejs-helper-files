@@ -94,7 +94,7 @@ const requestVCForID = async (tenantInfo, type, document) => {
     }
 }
 
-const verifyCredentials = async (tenantInfo, vc) => {
+const verifyCredential = async (tenantInfo, vc) => {
     try {
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
         const keySet = BIDTenant.getKeySet();
@@ -138,5 +138,5 @@ const verifyCredentials = async (tenantInfo, vc) => {
 
 module.exports = {
     requestVCForID,
-    verifyCredentials
+    verifyCredential
 }
