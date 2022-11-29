@@ -48,9 +48,13 @@ const requestVCForID = async (tenantInfo, type, document) => {
         const licenseKey = tenantInfo.licenseKey;
         const sd = await BIDTenant.getSD(tenantInfo);
 
+        let keys = BIDECDSA.generateKeyPair();
+
         let sessionsPublicKey = await getVcsPublicKey(tenantInfo);
 
         let userDid = uuidv4();
+
+        let publicKey = keys[1];
 
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
 
@@ -75,12 +79,12 @@ const requestVCForID = async (tenantInfo, type, document) => {
             body: {
                 document,
                 did: userDid,
-                publicKey: keySet.pKey
+                publicKey
             }
         });
 
         let status = api_response.status;
-        
+
         api_response = api_response.json;
 
         if (status === 200) {
