@@ -219,6 +219,15 @@ let document = {
     "ocr": ""
 }
 
-let issuedVerifiableCredentials = await BIDVerifiableCredential.issueVerifiableCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
+let issuedVerifiableCredential = await BIDVerifiableCredential.issueVerifiableCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
+
+```
+
+- Verify verifiable credentials
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+const vc = await BIDVerifiableCredential.verifyVerifiableCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <issuedVerifiableCredential>);
 
 ```
