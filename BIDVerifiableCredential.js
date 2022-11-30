@@ -7,22 +7,14 @@
  */
 "use strict";
 const { v4: uuidv4 } = require('uuid');
-const NodeCache = require('node-cache');
 const BIDECDSA = require('./BIDECDSA');
 const BIDTenant = require('./BIDTenant');
 const WTM = require('./WTM');
-
-const cache = new NodeCache({ stdTTL: 10 * 60 });
 
 const getVcsPublicKey = async (tenantInfo) => {
     try {
 
         const sd = await BIDTenant.getSD(tenantInfo);
-        let vcsPublicKeyCache = cache.get(sd.vcs + "/publickeys");
-
-        if (vcsPublicKeyCache) {
-            return vcsPublicKeyCache;
-        }
 
         let headers = {
             'Content-Type': 'application/json',
@@ -30,14 +22,16 @@ const getVcsPublicKey = async (tenantInfo) => {
         }
 
         let url = `${sd.vcs}/publickeys`;
-        let api_response = await WTM.executeRequest({ method: 'get', url, headers});
-        
-        let ret = null;
-        if (api_response) {
-            api_response = api_response.json;
-            ret = api_response.publicKey;
-            cache.set(sd.vcs + "/publickeys", ret);
-        }
+        let ret = await WTM.executeRequest({
+            method: 'get',
+            url,
+            headers,
+            cacheKey: url,
+            ttl: 600,
+            preCacheCallback: function (preCachedData) {
+                return preCachedData.json ? preCachedData.json.publicKey : null;
+            }
+        });
 
         return ret;
     } catch (error) {
@@ -46,7 +40,7 @@ const getVcsPublicKey = async (tenantInfo) => {
 
 }
 
-const issueVerifiableCredentials = async (tenantInfo, type, document) => {
+const requestVCForID = async (tenantInfo, type, document) => {
     try {
 
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
@@ -54,9 +48,13 @@ const issueVerifiableCredentials = async (tenantInfo, type, document) => {
         const licenseKey = tenantInfo.licenseKey;
         const sd = await BIDTenant.getSD(tenantInfo);
 
+        let keys = BIDECDSA.generateKeyPair();
+
         let sessionsPublicKey = await getVcsPublicKey(tenantInfo);
-        
+
         let userDid = uuidv4();
+
+        let publicKey = keys[1];
 
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
 
@@ -80,7 +78,8 @@ const issueVerifiableCredentials = async (tenantInfo, type, document) => {
             headers,
             body: {
                 document,
-                did: userDid
+                did: userDid,
+                publicKey
             }
         });
 
@@ -88,13 +87,17 @@ const issueVerifiableCredentials = async (tenantInfo, type, document) => {
 
         api_response = api_response.json;
 
-        api_response.status = status;
+        if (status === 200) {
+            api_response = api_response.vc;
+        }
+
         return api_response;
+
     } catch (error) {
         throw error;
     }
 }
 
 module.exports = {
-    issueVerifiableCredentials
+    requestVCForID
 }
