@@ -52,6 +52,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
     let publicKey = (await WTM.executeRequest({
         method: 'get',
         url: pubicKeyUrl,
+        keepAlive: true,
         Logger,
         requestID,
         cacheKey: pubicKeyUrl,
@@ -78,6 +79,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
     let ret = (await WTM.executeRequest({
         method: 'get',
         url: url,
+        keepAlive: true,
         Logger,
         requestID,
         headers: headers,
@@ -115,6 +117,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     let publicKey = (await WTM.executeRequest({
         method: 'get',
         url: pubicKeyUrl,
+        keepAlive: true,
         Logger,
         requestID,
         cacheKey: pubicKeyUrl,
@@ -140,6 +143,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     let ret = (await WTM.executeRequest({
         method: 'get',
         url: url,
+        keepAlive: true,
         Logger,
         requestID,
         headers: headers,
@@ -180,6 +184,7 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestID = uuidv4(),
     let ret = (await WTM.executeRequest({
         method: 'get',
         url: url,
+        keepAlive: true,
         Logger,
         requestID,
         headers: headers,
@@ -221,6 +226,7 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
     let ret = (await WTM.executeRequest({
         method: 'get',
         url: url,
+        keepAlive: true,
         Logger,
         requestID,
         headers: headers,
