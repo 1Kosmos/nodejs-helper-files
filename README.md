@@ -219,6 +219,6 @@ let document = {
     "ocr": ""
 }
 
-let issuedVerifiableCredentials = await BIDVerifiableCredential.issueVerifiableCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
+let issuedVerifiableCredentials = await BIDVerifiableCredential.requestVCForID({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
 
 ```
