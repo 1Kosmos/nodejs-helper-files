@@ -219,7 +219,7 @@ let document = {
     "ocr": ""
 }
 
-let issuedVerifiableCredential = await BIDVerifiableCredential.issueVerifiableCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
+let issuedVerifiableCredential = await BIDVerifiableCredential.requestVCForID({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
 
 ```
 
@@ -228,6 +228,24 @@ let issuedVerifiableCredential = await BIDVerifiableCredential.issueVerifiableCr
 ```
 const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
 
-const vc = await BIDVerifiableCredential.verifyVerifiableCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <issuedVerifiableCredential>);
+const vc = await BIDVerifiableCredential.verifyCredential({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <issuedVerifiableCredential>);
+
+```
+
+
+- Request verifiable presentation
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+// sample vcs object
+let vcs = [
+    {
+      "vc": {},
+      "attributes": ["string"],
+      "ageToProve": "number"
+    }
+]
+const vp = await BIDVerifiableCredential.requestVPForCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vcs>);
 
 ```
