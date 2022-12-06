@@ -173,3 +173,79 @@ const BIDAccessCodes = require('blockid-nodejs-helpers/BIDAccessCodes');
 
 let redeemVerificationCodeResponse = await BIDAccessCodes.verifyAndRedeemEmailVerificationCode({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>");
 ```
+
+- Issue verifiable credentials 
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+ 
+let type = "dl";
+
+// sample document object
+let document = {
+    "type": "",
+    "documentType": "",
+    "category": "",
+    "proofedBy": "",
+    "documentId": "",
+    "id": "",
+    "firstName": "",
+    "lastName": "",
+    "familyName": "",
+    "middleName": "",
+    "givenName": "",
+    "fullName": "",
+    "dob": "",
+    "doe": "",
+    "doi": "",
+    "face": "",
+    "image": "",
+    "imageBack": "",
+    "gender": "",
+    "height": "",
+    "eyeColor": "",
+    "street": "",
+    "city": "",
+    "restrictionCode": "",
+    "residenceCity": "",
+    "state": "",
+    "country": "",
+    "zipCode": "",
+    "residenceZipCode": "",
+    "county": "",
+    "classificationCode": "",
+    "complianceType": "",
+    "discriminatorNumber": "",
+    "barcodeInfo": "",
+    "ocr": ""
+}
+
+let issuedVerifiableCredential = await BIDVerifiableCredential.requestVCForID({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
+
+```
+
+- Verify verifiable credentials
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+const vc = await BIDVerifiableCredential.verifyCredential({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <issuedVerifiableCredential>);
+
+```
+
+
+- Request verifiable presentation
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+// sample vcs object
+let vcs = [
+    {
+      "vc": {},
+      "attributes": ["string"],
+      "ageToProve": "number"
+    }
+]
+const vp = await BIDVerifiableCredential.requestVPForCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vcs>);
+
+```
