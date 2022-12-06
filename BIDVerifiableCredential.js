@@ -51,13 +51,13 @@ const requestVCForID = async (tenantInfo, type, document) => {
 
         let keys = BIDECDSA.generateKeyPair();
 
-        let sessionsPublicKey = await getVcsPublicKey(tenantInfo);
+        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
 
         let userDid = uuidv4();
 
         let publicKey = keys[1];
 
-        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
 
         const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
             ts: Math.round(new Date().getTime() / 1000),

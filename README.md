@@ -174,7 +174,7 @@ const BIDAccessCodes = require('blockid-nodejs-helpers/BIDAccessCodes');
 let redeemVerificationCodeResponse = await BIDAccessCodes.verifyAndRedeemEmailVerificationCode({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>");
 ```
 
-- Issue verifiable credentials 
+- Request verifiable credentials 
 ```
 const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
  
