@@ -28,6 +28,7 @@ const getVcsPublicKey = async (tenantInfo) => {
             headers,
             cacheKey: url,
             ttl: 600,
+            keepAlive: true,
             preCacheCallback: function (preCachedData) {
                 return preCachedData.json ? preCachedData.json.publicKey : null;
             }
@@ -80,7 +81,8 @@ const requestVCForID = async (tenantInfo, type, document) => {
                 document,
                 did: userDid,
                 publicKey
-            }
+            },
+            keepAlive: true
         });
 
         let status = api_response.status;
