@@ -100,6 +100,50 @@ const requestVCForID = async (tenantInfo, type, document) => {
     }
 }
 
+const verifyCredential = async (tenantInfo, vc) => {
+    try {
+        const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+        const keySet = BIDTenant.getKeySet();
+        const licenseKey = tenantInfo.licenseKey;
+        const sd = await BIDTenant.getSD(tenantInfo);
+
+        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
+        
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
+
+        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+            ts: Math.round(new Date().getTime() / 1000),
+            appid: 'fixme',
+            uuid: uuidv4()
+        }), sharedKey);
+
+        let headers = {
+            'Content-Type': 'application/json',
+            'charset': 'utf-8',
+            publickey: keySet.pKey,
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: encryptedRequestId
+        }
+
+        let api_response = await WTM.executeRequest({
+            method: 'post',
+            url: sd.vcs + "/tenant/" + communityInfo.tenant.id + "/community/" + communityInfo.community.id + "/vc/verify",
+            headers,
+            body: {
+                vc
+            },
+            keepAlive: true
+        });
+
+        api_response = api_response.json;
+
+        return api_response;
+    } catch (error) {
+        throw error;
+    }
+}
+
 module.exports = {
-    requestVCForID
+    requestVCForID,
+    verifyCredential
 }

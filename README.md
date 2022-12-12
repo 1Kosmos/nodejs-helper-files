@@ -206,6 +206,15 @@ let document = {
     "county": ""
 }
 
-let issuedVerifiableCredentials = await BIDVerifiableCredential.requestVCForID({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
+let issuedVerifiableCredential = await BIDVerifiableCredential.requestVCForID({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
+
+```
+
+- Verify verifiable credentials
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+const verifiedVCResponse = await BIDVerifiableCredential.verifyCredential({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <issuedVerifiableCredential>);
 
 ```
