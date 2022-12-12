@@ -32,49 +32,56 @@ const makeInfraKey = () => {
     return null;
 };
 
-const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
-
+const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, senderId, Logger) => {
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         return infraKey;
     }
 
+    if (!requestID || (requestID && !requestID.uuid)) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'RequestId is required.' };
+    }
+    if (!senderId) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'senderId is required.' };
+    }
+    
     let cacheKey = `${serviceUrl}/${licenseKey}`;
 
     let pubicKeyUrl = `${serviceUrl}/publickeys`;
     let publicKey = (await WTM.executeRequest({
         method: 'get',
         url: pubicKeyUrl,
+        keepAlive: true,
         Logger,
-        requestUID,
+        requestID,
         cacheKey: pubicKeyUrl,
         ttl: 600
     })).json.publicKey;
 
     let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
 
-    const requestId = JSON.stringify({
-        ts: Math.round(new Date().getTime() / 1000),
-        appid: senderId,
-        uuid: requestUID
-    });
+    const requestId = requestID;
+    requestId.ts = Math.round(new Date().getTime() / 1000)
+    requestId.uuid = requestID.uuid
+    requestId.appid = senderId
 
     const headers = {
         licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-        requestid: BIDECDSA.encrypt(requestId, sharedKey),
+        requestid: BIDECDSA.encrypt(JSON.stringify(requestId), sharedKey),
         publickey: myKeyPair.keyId
     };
 
     let url = `${serviceUrl}/servicekey/current`;
 
-    Logger.info(`BIDLicenses - getCurrentLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - getCurrentLicense calling WTM for requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
         url: url,
+        keepAlive: true,
         Logger,
-        requestUID,
+        requestID,
         headers: headers,
         cacheKey: cacheKey,
         ttl: 600,
@@ -87,17 +94,21 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestUID =
     if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
-
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 };
 
-const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestUID = uuidv4(), senderId, Logger) => {
-
+const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestID, senderId, Logger) => {
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`BIDLicenses - checkCommunityLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - checkCommunityLicense for requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         infraKey.isAuthorized = true;
         return infraKey;
+    }
+    if (!requestID || (requestID && !requestID.uuid)) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'RequestId is required.' };
+    }
+    if (!senderId) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'senderId is required.' };
     }
 
     let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`;
@@ -106,34 +117,35 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     let publicKey = (await WTM.executeRequest({
         method: 'get',
         url: pubicKeyUrl,
+        keepAlive: true,
         Logger,
-        requestUID,
+        requestID,
         cacheKey: pubicKeyUrl,
         ttl: 600
     })).json.publicKey;
 
     let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
 
-    const requestId = JSON.stringify({
-        ts: Math.round(new Date().getTime() / 1000),
-        appid: senderId,
-        uuid: requestUID
-    });
+    const requestId = requestID;
+    requestId.uuid = requestID.uuid
+    requestId.appid = senderId
+    requestId.ts = Math.round(new Date().getTime() / 1000)
 
     const headers = {
         licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-        requestid: BIDECDSA.encrypt(requestId, sharedKey),
+        requestid: BIDECDSA.encrypt(JSON.stringify(requestId), sharedKey),
         publickey: myKeyPair.keyId
     };
 
     let url = `${serviceUrl}/community/${communityId}/licensecheck`;
-    Logger.info(`BIDLicenses - checkCommunityLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - checkCommunityLicense calling WTM for requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
         url: url,
+        keepAlive: true,
         Logger,
-        requestUID,
+        requestID,
         headers: headers,
         cacheKey: cacheKey,
         ttl: 600,
@@ -147,33 +159,34 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     if (ret && ret.json && ret.json.isAuthorized === true) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 };
 
-const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4(), senderId, Logger) => {
+const getU1CurrentLicense = async (licenseKey, serviceUrl, requestID = uuidv4(), senderId, Logger) => {
 
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - getCurrentLicense for requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         return infraKey;
     }
 
     const headers = {
         licensekey: licenseKey,
-        requestid: requestUID
+        requestid: requestID
     };
 
     let cacheKey = `${serviceUrl}/${licenseKey}`;
 
     let url = `${serviceUrl}/u1/servicekey/current`;
 
-    Logger.info(`BIDLicenses - "${senderId}" invokes getU1CurrentLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - "${senderId}" invokes getU1CurrentLicense calling WTM for requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
         url: url,
+        keepAlive: true,
         Logger,
-        requestUID,
+        requestID,
         headers: headers,
         cacheKey: cacheKey,
         ttl: 600,
@@ -186,35 +199,36 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestUID = uuidv4()
     if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 
 };
 
-const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requestUID = uuidv4(), senderId, Logger) => {
+const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requestID = uuidv4(), senderId, Logger) => {
 
     const infraKey = makeInfraKey();
     if (infraKey && infraKey.keySecret === licenseKey) {
-        Logger.info(`BIDLicenses - checkU1CommunityLicense for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
+        Logger.info(`BIDLicenses - checkU1CommunityLicense for requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)} resulted in infraLicenses for URL: ${serviceUrl} `);
         infraKey.isAuthorized = true;
         return infraKey;
     }
 
     let headers;
     headers = {
-        licensekey: licenseKey, 
-        requestid: requestUID
+        licensekey: licenseKey,
+        requestid: requestID
     };
 
     let cacheKey = `${serviceUrl}/${communityId}/${licenseKey}`;
 
     let url = `${serviceUrl}/u1/community/${communityId}/licensecheck`;
-    Logger.info(`BIDLicenses - "${senderId}" invokes checkU1CommunityLicense calling WTM for requestId: ${requestUID ? requestUID : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
+    Logger.info(`BIDLicenses - "${senderId}" invokes checkU1CommunityLicense calling WTM for requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)} calling URL: ${url} `);
 
     let ret = (await WTM.executeRequest({
         method: 'get',
         url: url,
+        keepAlive: true,
         Logger,
-        requestUID,
+        requestID,
         headers: headers,
         cacheKey: cacheKey,
         ttl: 600,
@@ -228,7 +242,7 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
     if (ret && ret.json && ret.json.isAuthorized === true) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 };
 
 module.exports = {
@@ -236,5 +250,5 @@ module.exports = {
     getCurrentLicense,
     checkCommunityLicense,
     getU1CurrentLicense,
-    checkU1CommunityLicense    
+    checkU1CommunityLicense
 };

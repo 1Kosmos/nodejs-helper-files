@@ -174,7 +174,7 @@ const BIDAccessCodes = require('blockid-nodejs-helpers/BIDAccessCodes');
 let redeemVerificationCodeResponse = await BIDAccessCodes.verifyAndRedeemEmailVerificationCode({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>");
 ```
 
-- Issue verifiable credentials 
+- Request verifiable credentials 
 ```
 const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
  
@@ -219,7 +219,7 @@ let document = {
     "ocr": ""
 }
 
-let issuedVerifiableCredential = await BIDVerifiableCredential.issueVerifiableCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
+let issuedVerifiableCredential = await BIDVerifiableCredential.requestVCForID({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
 
 ```
 
@@ -228,6 +228,6 @@ let issuedVerifiableCredential = await BIDVerifiableCredential.issueVerifiableCr
 ```
 const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
 
-const vc = await BIDVerifiableCredential.verifyVerifiableCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <issuedVerifiableCredential>);
+const verifiedVCResponse = await BIDVerifiableCredential.verifyCredential({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <issuedVerifiableCredential>);
 
 ```

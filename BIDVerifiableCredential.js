@@ -28,6 +28,7 @@ const getVcsPublicKey = async (tenantInfo) => {
             headers,
             cacheKey: url,
             ttl: 600,
+            keepAlive: true,
             preCacheCallback: function (preCachedData) {
                 return preCachedData.json ? preCachedData.json.publicKey : null;
             }
@@ -48,11 +49,15 @@ const requestVCForID = async (tenantInfo, type, document) => {
         const licenseKey = tenantInfo.licenseKey;
         const sd = await BIDTenant.getSD(tenantInfo);
 
-        let sessionsPublicKey = await getVcsPublicKey(tenantInfo);
+        let keys = BIDECDSA.generateKeyPair();
+
+        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
 
         let userDid = uuidv4();
 
-        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
+        let publicKey = keys[1];
+
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
 
         const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
             ts: Math.round(new Date().getTime() / 1000),
@@ -75,12 +80,13 @@ const requestVCForID = async (tenantInfo, type, document) => {
             body: {
                 document,
                 did: userDid,
-                publicKey: keySet.pKey
-            }
+                publicKey
+            },
+            keepAlive: true
         });
 
         let status = api_response.status;
-        
+
         api_response = api_response.json;
 
         if (status === 200) {
@@ -101,9 +107,9 @@ const verifyCredential = async (tenantInfo, vc) => {
         const licenseKey = tenantInfo.licenseKey;
         const sd = await BIDTenant.getSD(tenantInfo);
 
-        let sessionsPublicKey = await getVcsPublicKey(tenantInfo);
+        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
         
-        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
 
         const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
             ts: Math.round(new Date().getTime() / 1000),
@@ -125,7 +131,8 @@ const verifyCredential = async (tenantInfo, vc) => {
             headers,
             body: {
                 vc
-            }
+            },
+            keepAlive: true
         });
 
         api_response = api_response.json;
