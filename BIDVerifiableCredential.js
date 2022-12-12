@@ -108,7 +108,7 @@ const verifyCredential = async (tenantInfo, vc) => {
         const sd = await BIDTenant.getSD(tenantInfo);
 
         let vcsPublicKey = await getVcsPublicKey(tenantInfo);
-
+        
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
 
         const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
@@ -131,7 +131,8 @@ const verifyCredential = async (tenantInfo, vc) => {
             headers,
             body: {
                 vc
-            }
+            },
+            keepAlive: true
         });
 
         api_response = api_response.json;
@@ -173,7 +174,8 @@ const requestVPForCredentials = async (tenantInfo, vcs) => {
             headers,
             body: {
                 vcs
-            }
+            },
+            keepAlive: true
         });
 
         let status = api_response.status;
@@ -222,7 +224,8 @@ const verifyPresentation = async (tenantInfo, vp) => {
             headers,
             body: {
                 vp
-            }
+            },
+            keepAlive: true
         });
 
         return api_response.json;
