@@ -197,26 +197,13 @@ let document = {
     "dob": "",
     "doe": "",
     "doi": "",
-    "face": "",
-    "image": "",
-    "imageBack": "",
     "gender": "",
-    "height": "",
-    "eyeColor": "",
     "street": "",
     "city": "",
-    "restrictionCode": "",
-    "residenceCity": "",
     "state": "",
     "country": "",
     "zipCode": "",
-    "residenceZipCode": "",
-    "county": "",
-    "classificationCode": "",
-    "complianceType": "",
-    "discriminatorNumber": "",
-    "barcodeInfo": "",
-    "ocr": ""
+    "county": ""
 }
 
 let issuedVerifiableCredentials = await BIDVerifiableCredential.requestVCForID({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
