@@ -224,7 +224,8 @@ const verifiedVCResponse = await BIDVerifiableCredential.verifyCredential({ "dns
 ```
 const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
 
-// sample vcs object
+// sample vcs object (see {tenant-dns}/vcs/docs for up to date request structure)
+// example https://blockid-trial.1kosmos.net/vcs/docs/#/Credentials/post_tenant__tenantId__community__communityId__vp_create
 let vcs = [
     {
       "vc": {},
