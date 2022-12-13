@@ -326,56 +326,11 @@ const getVcStatusById = async (tenantInfo, vcId) => {
     }
 }
 
-const downloadVc = async (tenantInfo, vcId) => {
-    try {
-        const keySet = BIDTenant.getKeySet();
-        const licenseKey = tenantInfo.licenseKey;
-        const sd = await BIDTenant.getSD(tenantInfo);
-
-        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
-
-        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
-
-        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-            ts: Math.round(new Date().getTime() / 1000),
-            appid: 'fixme',
-            uuid: uuidv4()
-        }), sharedKey);
-
-        let headers = {
-            'Content-Type': 'application/json',
-            'charset': 'utf-8',
-            publickey: keySet.pKey,
-            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-            requestid: encryptedRequestId
-        }
-
-        let api_response = await WTM.executeRequest({
-            method: 'get',
-            url: sd.vcs + "/vc/" + vcId + "/download",
-            headers,
-            keepAlive: true
-        });
-
-        api_response = api_response.json;
-        if (api_response.data) {
-            let dec_data = JSON.parse(BIDECDSA.decrypt(api_response.data, sharedKey));
-            api_response = dec_data;
-        }
-
-        return api_response;
-
-    } catch (error) {
-        throw error;
-    }
-}
-
 module.exports = {
     requestVCForID,
     requestVCForPayload,
     verifyCredential,
     requestVPForCredentials,
     verifyPresentation,
-    getVcStatusById,
-    downloadVc
+    getVcStatusById
 }
