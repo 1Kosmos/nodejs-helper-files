@@ -100,6 +100,58 @@ const requestVCForID = async (tenantInfo, type, document) => {
     }
 }
 
+const requestVCForPayload = async (tenantInfo, type, payload) => {
+    try {
+
+        const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+        const keySet = BIDTenant.getKeySet();
+        const licenseKey = tenantInfo.licenseKey;
+        const sd = await BIDTenant.getSD(tenantInfo);
+
+        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
+
+        let userDid = uuidv4();
+
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
+
+        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+            ts: Math.round(new Date().getTime() / 1000),
+            appid: 'fixme',
+            uuid: uuidv4()
+        }), sharedKey);
+
+        let headers = {
+            'Content-Type': 'application/json',
+            'charset': 'utf-8',
+            publickey: keySet.pKey,
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: encryptedRequestId
+        }
+
+        let api_response = await WTM.executeRequest({
+            method: 'post',
+            url: sd.vcs + "/tenant/" + communityInfo.tenant.id + "/community/" + communityInfo.community.id + "/vc/from/payload/" + type,
+            headers,
+            body: {
+                info: payload,
+                did: userDid,
+                publicKey: keySet.pKey,
+                issuer: {
+                    id: `id:${userDid}`
+                }
+            },
+            keepAlive: true
+        });
+
+        api_response = api_response.json;
+
+        return api_response;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 const verifyCredential = async (tenantInfo, vc) => {
     try {
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
@@ -108,7 +160,7 @@ const verifyCredential = async (tenantInfo, vc) => {
         const sd = await BIDTenant.getSD(tenantInfo);
 
         let vcsPublicKey = await getVcsPublicKey(tenantInfo);
-        
+
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
 
         const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
@@ -143,7 +195,187 @@ const verifyCredential = async (tenantInfo, vc) => {
     }
 }
 
+const requestVPForCredentials = async (tenantInfo, vcs) => {
+    try {
+        const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+        const keySet = BIDTenant.getKeySet();
+        const licenseKey = tenantInfo.licenseKey;
+        const sd = await BIDTenant.getSD(tenantInfo);
+
+        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
+
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
+
+        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+            ts: Math.round(new Date().getTime() / 1000),
+            appid: 'fixme',
+            uuid: uuidv4()
+        }), sharedKey);
+
+        let headers = {
+            'Content-Type': 'application/json',
+            'charset': 'utf-8',
+            publickey: keySet.pKey,
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: encryptedRequestId
+        }
+
+        let api_response = await WTM.executeRequest({
+            method: 'post',
+            url: sd.vcs + "/tenant/" + communityInfo.tenant.id + "/community/" + communityInfo.community.id + "/vp/create",
+            headers,
+            body: {
+                vcs
+            },
+            keepAlive: true
+        });
+
+        let status = api_response.status;
+
+        api_response = api_response.json;
+
+        if (status === 200) {
+            api_response = api_response.vp;
+        }
+
+        return api_response;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+const verifyPresentation = async (tenantInfo, vp) => {
+    try {
+        const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+        const keySet = BIDTenant.getKeySet();
+        const licenseKey = tenantInfo.licenseKey;
+        const sd = await BIDTenant.getSD(tenantInfo);
+
+        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
+
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
+
+        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+            ts: Math.round(new Date().getTime() / 1000),
+            appid: 'fixme',
+            uuid: uuidv4()
+        }), sharedKey);
+
+        let headers = {
+            'Content-Type': 'application/json',
+            'charset': 'utf-8',
+            publickey: keySet.pKey,
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: encryptedRequestId
+        }
+
+        let api_response = await WTM.executeRequest({
+            method: 'post',
+            url: sd.vcs + "/tenant/" + communityInfo.tenant.id + "/community/" + communityInfo.community.id + "/vp/verify",
+            headers,
+            body: {
+                vp
+            },
+            keepAlive: true
+        });
+
+        return api_response.json;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+const getVcStatusById = async (tenantInfo, vcId) => {
+    try {
+        const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+        const keySet = BIDTenant.getKeySet();
+        const licenseKey = tenantInfo.licenseKey;
+        const sd = await BIDTenant.getSD(tenantInfo);
+
+        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
+
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
+
+        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+            ts: Math.round(new Date().getTime() / 1000),
+            appid: 'fixme',
+            uuid: uuidv4()
+        }), sharedKey);
+
+        let headers = {
+            'Content-Type': 'application/json',
+            'charset': 'utf-8',
+            publickey: keySet.pKey,
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: encryptedRequestId
+        }
+
+        let api_response = await WTM.executeRequest({
+            method: 'get',
+            url: sd.vcs + "/tenant/" + communityInfo.tenant.id + "/community/" + communityInfo.community.id + "/vc/" + vcId + "/status",
+            headers,
+            keepAlive: true
+        });
+
+        return api_response.json;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+const downloadVc = async (tenantInfo, vcId) => {
+    try {
+        const keySet = BIDTenant.getKeySet();
+        const licenseKey = tenantInfo.licenseKey;
+        const sd = await BIDTenant.getSD(tenantInfo);
+
+        let vcsPublicKey = await getVcsPublicKey(tenantInfo);
+
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
+
+        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+            ts: Math.round(new Date().getTime() / 1000),
+            appid: 'fixme',
+            uuid: uuidv4()
+        }), sharedKey);
+
+        let headers = {
+            'Content-Type': 'application/json',
+            'charset': 'utf-8',
+            publickey: keySet.pKey,
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: encryptedRequestId
+        }
+
+        let api_response = await WTM.executeRequest({
+            method: 'get',
+            url: sd.vcs + "/vc/" + vcId + "/download",
+            headers,
+            keepAlive: true
+        });
+
+        api_response = api_response.json;
+        if (api_response.data) {
+            let dec_data = JSON.parse(BIDECDSA.decrypt(api_response.data, sharedKey));
+            api_response = dec_data;
+        }
+
+        return api_response;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 module.exports = {
     requestVCForID,
-    verifyCredential
+    requestVCForPayload,
+    verifyCredential,
+    requestVPForCredentials,
+    verifyPresentation,
+    getVcStatusById,
+    downloadVc
 }

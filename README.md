@@ -174,7 +174,7 @@ const BIDAccessCodes = require('blockid-nodejs-helpers/BIDAccessCodes');
 let redeemVerificationCodeResponse = await BIDAccessCodes.verifyAndRedeemEmailVerificationCode({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>");
 ```
 
-- Request verifiable credentials 
+- Request verifiable credentials for ID
 ```
 const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
  
@@ -216,5 +216,73 @@ let issuedVerifiableCredential = await BIDVerifiableCredential.requestVCForID({ 
 const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
 
 const verifiedVCResponse = await BIDVerifiableCredential.verifyCredential({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <issuedVerifiableCredential>);
+
+```
+
+- Request verifiable presentation
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+// sample vcs object
+let vcs = [
+    {
+      "vc": {},
+      "attributes": ["string"],
+      "ageToProve": "number"
+    }
+]
+const vpResponse = await BIDVerifiableCredential.requestVPForCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vcs>);
+
+```
+
+- Verify verifiable presentation
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+let verifiedVP = await BIDVerifiableCredential.verifyPresentation({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vp>);
+
+```
+
+- Request verifiable credentials for Payload
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+// sample request object
+let type = "employment_card";
+
+let payload = {
+     "id": "string required",
+     "firstName": "string required",
+     "lastName": "string required",
+     "companyName": "string required",
+     "companyAddress": "string required",
+     "department": "string optional",
+     "title": "string optional",
+     "doe": "string required (format yyyymmdd)"
+     "xx": "string, number or boolean optional"
+}
+
+let verifiedVP = await BIDVerifiableCredential.requestVCForPayload({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <type>, <payload>);
+
+```
+
+- Get verifiable credentials status
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+let vcStatus = await BIDVerifiableCredential.getVcStatusById({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vcId>);
+
+```
+
+- Download verifiable credentials
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+let vc = await BIDVerifiableCredential.downloadVc({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vcId>);
 
 ```
