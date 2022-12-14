@@ -229,7 +229,7 @@ const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCre
 // sample vcs object (see {tenant-dns}/vcs/docs for up to date request structure)
 // example https://blockid-trial.1kosmos.net/vcs/docs/#/Credentials/post_tenant__tenantId__community__communityId__vc_from_payload__type_
 
-let verifiedVP = await BIDVerifiableCredential.requestVCForPayload({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <type>, <userDid>, <userPublickey>, <issuer>, <info>, <userUrn>);
+let verifiedVP = await BIDVerifiableCredential.requestVCForPayload({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <type>, <issuer>, <info>, <userDid>, <userPublickey>, <userUrn>);
 
 ```
 
