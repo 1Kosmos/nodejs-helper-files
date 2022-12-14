@@ -41,7 +41,7 @@ const getVcsPublicKey = async (tenantInfo) => {
 
 }
 
-const requestVCForID = async (tenantInfo, type, document) => {
+const requestVCForID = async (tenantInfo, type, document, userDid, userPublickey, userUrn) => {
     try {
 
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
@@ -49,13 +49,7 @@ const requestVCForID = async (tenantInfo, type, document) => {
         const licenseKey = tenantInfo.licenseKey;
         const sd = await BIDTenant.getSD(tenantInfo);
 
-        let keys = BIDECDSA.generateKeyPair();
-
         let vcsPublicKey = await getVcsPublicKey(tenantInfo);
-
-        let userDid = uuidv4();
-
-        let publicKey = keys[1];
 
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
 
@@ -80,7 +74,8 @@ const requestVCForID = async (tenantInfo, type, document) => {
             body: {
                 document,
                 did: userDid,
-                publicKey
+                publicKey: userPublickey,
+                userURN: userUrn
             },
             keepAlive: true
         });
@@ -100,7 +95,7 @@ const requestVCForID = async (tenantInfo, type, document) => {
     }
 }
 
-const requestVCForPayload = async (tenantInfo, type, payload) => {
+const requestVCForPayload = async (tenantInfo, type, userDid, userPublickey, issuer, info, userUrn) => {
     try {
 
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
@@ -109,8 +104,6 @@ const requestVCForPayload = async (tenantInfo, type, payload) => {
         const sd = await BIDTenant.getSD(tenantInfo);
 
         let vcsPublicKey = await getVcsPublicKey(tenantInfo);
-
-        let userDid = uuidv4();
 
         let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, vcsPublicKey);
 
@@ -133,12 +126,11 @@ const requestVCForPayload = async (tenantInfo, type, payload) => {
             url: sd.vcs + "/tenant/" + communityInfo.tenant.id + "/community/" + communityInfo.community.id + "/vc/from/payload/" + type,
             headers,
             body: {
-                info: payload,
+                info,
                 did: userDid,
-                publicKey: keySet.pKey,
-                issuer: {
-                    id: `id:${userDid}`
-                }
+                publicKey: userPublickey,
+                issuer,
+                userURN: userUrn
             },
             keepAlive: true
         });
