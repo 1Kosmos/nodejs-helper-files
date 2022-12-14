@@ -174,39 +174,14 @@ const BIDAccessCodes = require('blockid-nodejs-helpers/BIDAccessCodes');
 let redeemVerificationCodeResponse = await BIDAccessCodes.verifyAndRedeemEmailVerificationCode({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>");
 ```
 
-- Request verifiable credentials 
+- Request verifiable credentials for ID
 ```
 const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
  
-let type = "dl";
+// sample vcs object (see {tenant-dns}/vcs/docs for up to date request structure)
+// example https://blockid-trial.1kosmos.net/vcs/docs/#/Credentials/post_tenant__tenantId__community__communityId__vc_from_document__type_
 
-// sample document object
-let document = {
-    "type": "",
-    "documentType": "",
-    "category": "",
-    "proofedBy": "",
-    "documentId": "",
-    "id": "",
-    "firstName": "",
-    "lastName": "",
-    "familyName": "",
-    "middleName": "",
-    "givenName": "",
-    "fullName": "",
-    "dob": "",
-    "doe": "",
-    "doi": "",
-    "gender": "",
-    "street": "",
-    "city": "",
-    "state": "",
-    "country": "",
-    "zipCode": "",
-    "county": ""
-}
-
-let issuedVerifiableCredential = await BIDVerifiableCredential.requestVCForID({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, type, document);
+let issuedVerifiableCredential = await BIDVerifiableCredential.requestVCForID({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <type>, <document>, <userDid>, <userPublickey>, <userUrn>);
 
 ```
 
@@ -215,6 +190,57 @@ let issuedVerifiableCredential = await BIDVerifiableCredential.requestVCForID({ 
 ```
 const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
 
+// sample vcs object (see {tenant-dns}/vcs/docs for up to date request structure)
+// example https://blockid-trial.1kosmos.net/vcs/docs/#/Credentials/post_tenant__tenantId__community__communityId__vc_verify
+
 const verifiedVCResponse = await BIDVerifiableCredential.verifyCredential({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <issuedVerifiableCredential>);
+
+```
+
+- Request verifiable presentation
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+// sample vcs object (see {tenant-dns}/vcs/docs for up to date request structure)
+// example https://blockid-trial.1kosmos.net/vcs/docs/#/Credentials/post_tenant__tenantId__community__communityId__vp_create
+
+const vpResponse = await BIDVerifiableCredential.requestVPForCredentials({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vcs>);
+
+```
+
+- Verify verifiable presentation
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+// sample vcs object (see {tenant-dns}/vcs/docs for up to date request structure)
+// example https://blockid-trial.1kosmos.net/vcs/docs/#/Credentials/post_tenant__tenantId__community__communityId__vp_verify
+
+let verifiedVP = await BIDVerifiableCredential.verifyPresentation({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vp>);
+
+```
+
+- Request verifiable credentials for Payload
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+// sample vcs object (see {tenant-dns}/vcs/docs for up to date request structure)
+// example https://blockid-trial.1kosmos.net/vcs/docs/#/Credentials/post_tenant__tenantId__community__communityId__vc_from_payload__type_
+
+let verifiedVP = await BIDVerifiableCredential.requestVCForPayload({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <type>, <userDid>, <userPublickey>, <issuer>, <info>, <userUrn>);
+
+```
+
+- Get verifiable credentials status
+
+```
+const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCredential.js');
+
+// sample vcs object (see {tenant-dns}/vcs/docs for up to date request structure)
+// example https://blockid-trial.1kosmos.net/vcs/docs/#/Credentials/get_tenant__tenantId__community__communityId__vc__vcId__status
+
+let vcStatus = await BIDVerifiableCredential.getVcStatusById({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vcId>);
 
 ```
