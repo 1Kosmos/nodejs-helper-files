@@ -80,13 +80,7 @@ const requestVCForID = async (tenantInfo, type, document, userDid, userPublickey
             keepAlive: true
         });
 
-        let status = api_response.status;
-
         api_response = api_response.json;
-
-        if (status === 200) {
-            api_response = api_response.vc;
-        }
 
         return api_response;
 
@@ -222,13 +216,7 @@ const requestVPForCredentials = async (tenantInfo, vcs) => {
             keepAlive: true
         });
 
-        let status = api_response.status;
-
         api_response = api_response.json;
-
-        if (status === 200) {
-            api_response = api_response.vp;
-        }
 
         return api_response;
 
