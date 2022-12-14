@@ -89,7 +89,7 @@ const requestVCForID = async (tenantInfo, type, document, userDid, userPublickey
     }
 }
 
-const requestVCForPayload = async (tenantInfo, type, userDid, userPublickey, issuer, info, userUrn) => {
+const requestVCForPayload = async (tenantInfo, type, issuer, info, userDid, userPublickey, userUrn) => {
     try {
 
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
