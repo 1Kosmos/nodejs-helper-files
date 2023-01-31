@@ -244,3 +244,13 @@ const BIDVerifiableCredential = require('blockid-nodejs-helpers/BIDVerifiableCre
 let vcStatus = await BIDVerifiableCredential.getVcStatusById({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <vcId>);
 
 ```
+
+- Request OAuth2 authorization code 
+
+```
+const BIDOauth2 = require('blockid-nodejs-helpers/BIDOauth2');
+
+let authorizationCodeResponse = await BIDOauth2.requestAuthorizationCode({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <proofOfAuthenticationJwt>, <clientId>, <responseType>, <scope>, <redirectUri>, <stateOrNull>, <nonceOrNull>);
+
+```
+
