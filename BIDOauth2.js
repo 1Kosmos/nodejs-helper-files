@@ -10,6 +10,7 @@
 const fetch = require('node-fetch');
 
 const BIDTenant = require('./BIDTenant');
+const WTM = require('./WTM');
 
 const requestAuthorizationCode = async (tenantInfo, proofOfAuthenticationJwt, clientId, responseType, scope, redirectUri, stateOrNull, nonceOrNull) => {
     try {
@@ -68,7 +69,47 @@ const requestAuthorizationCode = async (tenantInfo, proofOfAuthenticationJwt, cl
     }
 }
 
+const requestToken = async (tenantInfo, clientId, clientSecret, grantType, code, redirectUri) => {
+    try {
+        const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+        const sd = await BIDTenant.getSD(tenantInfo);
+
+        let auth = 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64');
+
+        let headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'charset': 'utf-8',
+            'Authorization': auth
+        }
+
+        const req = {
+            grant_type: grantType,
+            redirect_uri: redirectUri,
+            code
+        };
+
+        let api_response = await WTM.executeRequest({
+            method: 'post',
+            url: sd.oauth2 + "/community/" + communityInfo.community.name + "/v1/token",
+            headers,
+            urlSearchParams: new URLSearchParams(req),
+            keepAlive: true
+        });
+
+        let status = api_response.status;
+
+        api_response = api_response.json;
+        api_response.status = status;
+
+        return api_response;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 
 module.exports = {
-    requestAuthorizationCode
+    requestAuthorizationCode,
+    requestToken
 }
