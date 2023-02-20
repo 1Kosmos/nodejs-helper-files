@@ -259,6 +259,6 @@ let authorizationCodeResponse = await BIDOauth2.requestAuthorizationCode({ "dns"
 ```
 const BIDOauth2 = require('blockid-nodejs-helpers/BIDOauth2');
 
-let requestTokenResponse = await BIDOauth2.requestToken({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <clientId>, <clientSecret>, <grantType>, <code>, <redirectUri>);
+let requestTokenResponse = await BIDOauth2.requestToken({ "dns": "<dns>", "communityName": "<communityName>", "licenseKey": "<licenseKey>" }, <clientId>, <clientSecret>, <grantType>, <redirectUri>, <codeOrNull>, <refreshTokenOrNull>);
 
 ```
