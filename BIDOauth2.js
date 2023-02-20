@@ -69,7 +69,7 @@ const requestAuthorizationCode = async (tenantInfo, proofOfAuthenticationJwt, cl
     }
 }
 
-const requestToken = async (tenantInfo, clientId, clientSecret, grantType, code, redirectUri) => {
+const requestToken = async (tenantInfo, clientId, clientSecret, grantType, redirectUri, codeOrNull, refreshTokenOrNull) => {
     try {
         const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
         const sd = await BIDTenant.getSD(tenantInfo);
@@ -82,11 +82,18 @@ const requestToken = async (tenantInfo, clientId, clientSecret, grantType, code,
             'Authorization': auth
         }
 
-        const req = {
+        let req = {
             grant_type: grantType,
-            redirect_uri: redirectUri,
-            code
+            redirect_uri: redirectUri
         };
+
+        if(codeOrNull !== null) {
+            req.code = codeOrNull;
+        }
+
+        if(refreshTokenOrNull !== null) {
+            req.refresh_token = refreshTokenOrNull;
+        }
 
         let api_response = await WTM.executeRequest({
             method: 'post',
@@ -107,7 +114,6 @@ const requestToken = async (tenantInfo, clientId, clientSecret, grantType, code,
         throw error;
     }
 }
-
 
 module.exports = {
     requestAuthorizationCode,
