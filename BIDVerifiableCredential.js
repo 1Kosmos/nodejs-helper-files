@@ -328,11 +328,6 @@ const getVcStatusById = async (tenantInfo, vcId) => {
 
 const getVPWithDownlaodUri = async (licenseKey, keySet, downloadUri, requestID) => {
     try {
-        //const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
-        // const keySet = BIDTenant.getKeySet();
-        // const licenseKey = tenantInfo.licenseKey;
-        // const sd = await BIDTenant.getSD(tenantInfo);
-
         const serviceUrl = `https://` + URL.parse(downloadUri, true).host + "/vcs"
 
         let vcsPublicKey = await getPublicKey(serviceUrl);
