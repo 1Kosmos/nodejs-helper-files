@@ -10,6 +10,26 @@ const { v4: uuidv4 } = require('uuid');
 const BIDECDSA = require('./BIDECDSA');
 const BIDTenant = require('./BIDTenant');
 const WTM = require('./WTM');
+var URL = require('url');
+const httpStatus = require('http-status/lib');
+
+const getPublicKey = async (baseUrl) => {
+	const pubicKeyUrl = `${baseUrl}/publickeys`;
+	const response = await WTM.executeRequest({
+		method: 'get',
+		url: pubicKeyUrl,
+		keepAlive: true,
+		cacheKey: pubicKeyUrl,
+		ttl: 600
+	});
+
+	const ret = response && response.json && response.json.publicKey ? response.json.publicKey : null;
+	if (!ret) {
+		Logger.debug(`reqId: ${requestId} Got response while fetching publicKey from url: ${pubicKeyUrl}, Response: ${JSON.stringify(response)}`);
+		throw new ApiError(httpStatus.NOT_FOUND, Messages.noPublicKeyFound);
+	}
+	return ret;
+};
 
 const getVcsPublicKey = async (tenantInfo) => {
     try {
@@ -306,11 +326,60 @@ const getVcStatusById = async (tenantInfo, vcId) => {
     }
 }
 
+const getVPWithDownlaodUri = async (licenseKey, keySet, downloadUri, requestID) => {
+    try {
+        //const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
+        // const keySet = BIDTenant.getKeySet();
+        // const licenseKey = tenantInfo.licenseKey;
+        // const sd = await BIDTenant.getSD(tenantInfo);
+
+        const serviceUrl = `https://` + URL.parse(downloadUri, true).host + "/vcs"
+
+        let vcsPublicKey = await getPublicKey(serviceUrl);
+
+        let sharedKey = BIDECDSA.createSharedKey(keySet.keySecret, vcsPublicKey);
+
+        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify(requestID), sharedKey);
+
+        let headers = {
+            'Content-Type': 'application/json',
+            'charset': 'utf-8',
+            publickey: keySet.keyId,
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: encryptedRequestId
+        }
+
+        let api_response = await WTM.executeRequest({
+            method: 'get',
+            url: downloadUri,
+            headers,
+            keepAlive: true
+        });
+
+        const ret = {
+            status: api_response.status
+        }
+        if (api_response.status === httpStatus.OK && api_response.json && api_response.json.data) {
+            const str = BIDECDSA.decrypt(api_response.json.data, sharedKey)
+            ret.vp = JSON.parse(str).vp
+        }
+        else {
+            ret.response = api_response.text
+        }
+
+        return ret;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 module.exports = {
     requestVCForID,
     requestVCForPayload,
     verifyCredential,
     requestVPForCredentials,
     verifyPresentation,
-    getVcStatusById
+    getVcStatusById,
+    getVPWithDownlaodUri
 }
