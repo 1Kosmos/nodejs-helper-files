@@ -369,6 +369,45 @@ const getVPWithDownlaodUri = async (licenseKey, keySet, downloadUri, requestID) 
     }
 }
 
+const verifyVPWithDownlaodUri = async (licenseKey, keySet, downloadUri, vp, requestID) => {
+    try {
+
+        const serviceUrl = `https://` + URL.parse(downloadUri, true).host + "/vcs"
+
+        let vcsPublicKey = await getPublicKey(serviceUrl);
+
+        let sharedKey = BIDECDSA.createSharedKey(keySet.keySecret, vcsPublicKey);
+
+        const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify(requestID), sharedKey);
+
+        let headers = {
+            'Content-Type': 'application/json',
+            'charset': 'utf-8',
+            publickey: keySet.keyId,
+            licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
+            requestid: encryptedRequestId
+        }
+
+        let vc = vp.verifiableCredential[0]
+
+        let api_response = await WTM.executeRequest({
+            method: 'post',
+            url: serviceUrl + "/tenant/" + vc.issuer.tenantId + "/community/" + vc.issuer.communityId + "/vp/verify",
+            headers,
+            body: {
+                vp
+            },
+            keepAlive: true
+        });
+
+        
+
+        return api_response.json;        
+    } catch (error) {
+        throw error;
+    }
+}
+
 module.exports = {
     requestVCForID,
     requestVCForPayload,
@@ -376,5 +415,6 @@ module.exports = {
     requestVPForCredentials,
     verifyPresentation,
     getVcStatusById,
-    getVPWithDownlaodUri
+    getVPWithDownlaodUri,
+    verifyVPWithDownlaodUri
 }
