@@ -28,12 +28,17 @@ request object
 const executeRequest = async (object) => {
 
     let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null;
+
+    if (object.Logger) {
+        object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} w/ keepAlive: ${ object.keepAlive ? 'enabled' : 'disabled'} will use cache: ${cachedData ? "yes" : "no"}`);
+    }
+
+
     if (cachedData) {
-        if (object.Logger) {
-            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} skipped and using cache, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
-        }
         return cachedData;
     }
+
+    let t0 = Date.now();
 
     let request = {
         method: object.method
@@ -58,10 +63,6 @@ const executeRequest = async (object) => {
 
     if (object.timeout !== undefined) {
         request.timeout = object.timeout;
-    }
-
-    if (object.Logger) {
-        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'}, with keep-alive ${ object.keepAlive ? 'enabled' : 'disabled'}`);
     }
 
     let ret = {};
@@ -97,6 +98,9 @@ const executeRequest = async (object) => {
             cache.set(object.cacheKey, ret, object.ttl);
         }
     }
+
+    let t1 = Date.now();
+    object.Logger.info(`WTM completed for ${object.method} to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} in ${t1 - t0}`);
 
     return ret;
 };
