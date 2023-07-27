@@ -28,9 +28,15 @@ request object
 const executeRequest = async (object) => {
 
     let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null;
+    let logger = object.logger ? object.logger : object.Logger
 
-    if (object.Logger) {
-        object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} w/ keepAlive: ${ object.keepAlive ? 'enabled' : 'disabled'} will use cache: ${cachedData ? "yes" : "no"}`);
+    if (logger) {
+        logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} w/ keepAlive: ${ object.keepAlive ? 'enabled' : 'disabled'} will use cache: ${cachedData ? "yes" : "no"}`);
+    }
+
+    if (object.url.includes("caas/config/fetch")) {
+        let i = 0;
+        i++
     }
 
 
@@ -74,8 +80,8 @@ const executeRequest = async (object) => {
             ret.json = JSON.parse(ret.text);
         } catch (error) {
             //ret.error = error; //MK: SEP/2 this is not supposed to be an error
-            if (object.Logger) {
-                object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
+            if (logger) {
+                logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
             }
         }
     }
@@ -85,8 +91,8 @@ const executeRequest = async (object) => {
         httpStatus.FORBIDDEN,
         httpStatus.INTERNAL_SERVER_ERROR
     ]
-    if (responseStatus.includes(ret.status) && object.Logger) {
-        object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
+    if (responseStatus.includes(ret.status) && logger) {
+        logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
     }
 
     if (object.cacheKey && ret.status == httpStatus.OK) {
@@ -100,7 +106,7 @@ const executeRequest = async (object) => {
     }
 
     let t1 = Date.now();
-    object.Logger.info(`WTM completed for ${object.method} to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} in ${t1 - t0}`);
+    logger.info(`WTM completed for ${object.method} to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} in ${t1 - t0}`);
 
     return ret;
 };
