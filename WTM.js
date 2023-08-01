@@ -105,8 +105,10 @@ const executeRequest = async (object) => {
         }
     }
 
-    let t1 = Date.now();
-    logger.info(`WTM completed for ${object.method} to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} in ${t1 - t0}`);
+    if (logger) {
+        let t1 = Date.now();
+        logger.info(`WTM completed for ${object.method} to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} in ${t1 - t0}`);
+    }
 
     return ret;
 };
