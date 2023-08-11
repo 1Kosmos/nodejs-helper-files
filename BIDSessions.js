@@ -48,7 +48,7 @@ const getSessionPublicKey = async (tenantInfo) => {
 
 }
 
-const createNewSession = async (tenantInfo, authType, scopes) => {
+const createNewSession = async (tenantInfo, authType, scopes, metadata) => {
   try {
 
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
@@ -64,7 +64,8 @@ const createNewSession = async (tenantInfo, authType, scopes) => {
         url: sd.adminconsole,
         communityName: communityInfo.community.name,
         communityId: communityInfo.community.id,
-        authPage: 'blockid://authenticate'
+        authPage: 'blockid://authenticate',
+        metadata
       },
       scopes: (scopes !== undefined && scopes !== null) ? scopes : "",
       authtype: (authType !== undefined && authType !== null) ? authType : "none",
