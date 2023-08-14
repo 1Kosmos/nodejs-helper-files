@@ -65,10 +65,10 @@ const createNewSession = async (tenantInfo, authType, scopes, metadata) => {
         communityName: communityInfo.community.name,
         communityId: communityInfo.community.id,
         authPage: 'blockid://authenticate',
-        metadata
       },
       scopes: (scopes !== undefined && scopes !== null) ? scopes : "",
       authtype: (authType !== undefined && authType !== null) ? authType : "none",
+      metadata
     }
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);

@@ -45,7 +45,7 @@ let verifyOtpResponse = await BIDOTP.verifyOTP({ "dns": "<dns>", "communityName"
 ```
 const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
 
-let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<authType>", "<scopes>");
+let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<authType>", "<scopes>", "<metadata>");
 ```
 
 - Poll for UWL2.0 session response
