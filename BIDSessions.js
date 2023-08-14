@@ -64,7 +64,7 @@ const createNewSession = async (tenantInfo, authType, scopes, metadata) => {
         url: sd.adminconsole,
         communityName: communityInfo.community.name,
         communityId: communityInfo.community.id,
-        authPage: 'blockid://authenticate',
+        authPage: 'blockid://authenticate'
       },
       scopes: (scopes !== undefined && scopes !== null) ? scopes : "",
       authtype: (authType !== undefined && authType !== null) ? authType : "none",
