@@ -42,10 +42,15 @@ let verifyOtpResponse = await BIDOTP.verifyOTP({ "dns": "<dns>", "communityName"
 ```
 
 - Create new UWL2.0 session
+  - (new) supports additional set of k/v pairs as metadata to be passed into the session. This can be used to transmit supplemental information like
+    - purpose of the uwl session (eg: `authentication`, `hotel-checkin`)
+    - ip of the requesting web page
+    - dns of the requesting web page etc.
+  Depending on the implementation of the authenticator app, a user can be presented this additional info.
 ```
 const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
 
-let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<authType>", "<scopes>");
+let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<authType>", "<scopes>", "<metadata>");
 ```
 
 - Poll for UWL2.0 session response
