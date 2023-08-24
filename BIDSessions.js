@@ -12,6 +12,7 @@ const BIDECDSA = require('./BIDECDSA');
 const BIDTenant = require('./BIDTenant');
 const BIDUsers = require('./BIDUsers');
 const fetch = require('node-fetch');
+const WTM = require('./WTM');
 
 const cache = new NodeCache({ stdTTL: 10 * 60 });
 
@@ -176,7 +177,105 @@ const pollSession = async (tenantInfo, sessionId, fetchProfile, fetchDevices) =>
   }
 }
 
+const fetchSessionInfo = async (tenantInfo, sessionId) => {
+  try {
+    const sd = await BIDTenant.getSD(tenantInfo);
+
+    let api_response = await WTM.executeRequest({
+      method: 'get',
+      url: sd.sessions + "/session/" + sessionId,
+      keepAlive: true
+    });
+
+    let status = api_response.status;
+
+    if (status === 200) {
+      api_response = api_response.json;
+      api_response.status = status;
+    }
+
+    return api_response;
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+const authenticateSession = async (tenantInfo, sessionId, publicKey, appid, did, data, ialOrNull, eventDataOrNull) => {
+  try {
+
+    const keySet = BIDTenant.getKeySet();
+    const sd = await BIDTenant.getSD(tenantInfo);
+
+    let sessionsPublicKey = await getSessionPublicKey(tenantInfo);
+
+    let req = {
+      data,
+      publicKey,
+      did,
+      appid
+    }
+
+    if (ialOrNull !== null) {
+      req.ial = ialOrNull;
+    }
+
+    if (eventDataOrNull !== null) {
+      req.eventData = eventDataOrNull;
+    }
+
+    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
+
+    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+      ts: Math.round(new Date().getTime() / 1000),
+      appid: 'fixme',
+      uuid: uuidv4()
+    }), sharedKey);
+
+    let headers = {
+      'Content-Type': 'application/json',
+      'charset': 'utf-8',
+      publickey: keySet.pKey,
+      requestid: encryptedRequestId
+    }
+
+    let api_response = await WTM.executeRequest({
+      method: 'post',
+      url: sd.sessions + "/session/" + sessionId + "/authenticate",
+      body: req,
+      headers,
+      keepAlive: true
+    });
+
+    let status = api_response.status;
+
+    if (status === 200) {
+      api_response = api_response.json;
+      api_response.status = status;
+    }
+
+    return api_response;
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   createNewSession,
-  pollSession
+  pollSession,
+  fetchSessionInfo,
+  authenticateSession
+}
+
+
+
+let session = {
+  "sessionId": "8a4ff860-3375-4115-96eb-fe8d9230cef0_1",
+  "data": "MmFjMWY2M2JkYTU2ODVkNH8PWvza9zzFmuG/3jiUCPytBFp5/KqV1Sg1mWCc9ALn1skHWb1Ch+aUXMo2PRNOwbveWUItoUmQ82dii/NB/CgHfWRQSCRCtJMV4JQ63am+iLDnr85xeI6+sXBNdVv6SFCad6dVyNqJZtL2RyiEZgEvQaY+6WtPbyylI3wvfVO0zjXXZLskB1nb/pi3rgZQBzZL19O9VULkLR5GEY7X0Fms3uYXTfL0ZUDVn2WDbD3tdQSZWfDkasBYe9PaxwkqtLB5dRmq8x1NOHClevWcEgCLNLjWmUV8M+/o+tBQUEJQNtUzwOiVflDmpGucLEWNkrLfeeA/mVbAi55xH3h3obW54HasD/JqwSZJd/wmtJU2t1NV+W0HCpVuK7stY3Pt+oXM8kb7aG/ebEHkEFa0TKPz/NrdTxCzHg3S5ssq8uht/PXn1kU+2IxGn29lkWiGhie/DcediwURiBYMkEk9QNrJAarlvljMHtwc4ZUfO/BCU9TkoZZ9va3t4DGOUfXHR8ixBNZ94Ol6NrP97wWuVP2owO4a1V5C4cy3C57KFb/VKmlJecoOdsxkAXkFXGJSQQokUzKZZs3t6YO8xIjB+hmG6VkfdaDseDt3d024n9Fsk5uzpuJ11vqtkoZO3x5JqFARw9p598zXV2LEhVn/W6fcb7XRpEGWCZ0wdCw=",
+  "appid": "com.onekosmos.kernel.blockid",
+  "ial": "IAL1",
+  "did": "jenish_did",
+  "publicKey": "CE8kpAxwLCGlFj2rGEADuHe7L2KtUncZqOccwlHWrQmr86bWivPljL5ReEIr/lr4ES3wFP446VtdYT/qtSOAOA==",
+  "eventData": "event data",
+
 }
