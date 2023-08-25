@@ -266,16 +266,3 @@ module.exports = {
   fetchSessionInfo,
   authenticateSession
 }
-
-
-
-let session = {
-  "sessionId": "8a4ff860-3375-4115-96eb-fe8d9230cef0_1",
-  "data": "MmFjMWY2M2JkYTU2ODVkNH8PWvza9zzFmuG/3jiUCPytBFp5/KqV1Sg1mWCc9ALn1skHWb1Ch+aUXMo2PRNOwbveWUItoUmQ82dii/NB/CgHfWRQSCRCtJMV4JQ63am+iLDnr85xeI6+sXBNdVv6SFCad6dVyNqJZtL2RyiEZgEvQaY+6WtPbyylI3wvfVO0zjXXZLskB1nb/pi3rgZQBzZL19O9VULkLR5GEY7X0Fms3uYXTfL0ZUDVn2WDbD3tdQSZWfDkasBYe9PaxwkqtLB5dRmq8x1NOHClevWcEgCLNLjWmUV8M+/o+tBQUEJQNtUzwOiVflDmpGucLEWNkrLfeeA/mVbAi55xH3h3obW54HasD/JqwSZJd/wmtJU2t1NV+W0HCpVuK7stY3Pt+oXM8kb7aG/ebEHkEFa0TKPz/NrdTxCzHg3S5ssq8uht/PXn1kU+2IxGn29lkWiGhie/DcediwURiBYMkEk9QNrJAarlvljMHtwc4ZUfO/BCU9TkoZZ9va3t4DGOUfXHR8ixBNZ94Ol6NrP97wWuVP2owO4a1V5C4cy3C57KFb/VKmlJecoOdsxkAXkFXGJSQQokUzKZZs3t6YO8xIjB+hmG6VkfdaDseDt3d024n9Fsk5uzpuJ11vqtkoZO3x5JqFARw9p598zXV2LEhVn/W6fcb7XRpEGWCZ0wdCw=",
-  "appid": "com.onekosmos.kernel.blockid",
-  "ial": "IAL1",
-  "did": "jenish_did",
-  "publicKey": "CE8kpAxwLCGlFj2rGEADuHe7L2KtUncZqOccwlHWrQmr86bWivPljL5ReEIr/lr4ES3wFP446VtdYT/qtSOAOA==",
-  "eventData": "event data",
-
-}

@@ -59,6 +59,27 @@ const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
 
 let authSessionRespone = await BIDSessions.pollSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>", true, true);
 ```
+- Fetch UWL2.0 session info
+```
+const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
+
+let sessionInfo = await BIDSessions.fetchSessionInfo({ "dns": "<dns>", "communityName": "<communityName>" } , <sessionId>);
+```
+
+- Submit UWL2.0 session authentication data
+  - Details on the parameters
+    - sessionId: Id of session to submit auth data is type of string and required.
+    - publicKey: The callers publicKey is type of string and required.
+    - appId: The appId is type of string and required.
+    - did: The user did is type of string and required
+    - data: The authentication data to be submitted is of the string type and is required.
+    - ial: The ial is type of string and optional
+    - eventData: The eventData is type of string and optional
+```
+const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
+
+let authenticatedResponse = await BIDSessions.authenticateSession({ "dns": "<dns>", "communityName": "<communityName>" }, <sessionId>, <publicKey>, <appId>, <did>, <data>, <ial>, <eventData>);
+```
 
 - FIDO device registration options
 ```
