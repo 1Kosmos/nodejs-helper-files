@@ -12,6 +12,7 @@ const BIDECDSA = require('./BIDECDSA');
 const BIDTenant = require('./BIDTenant');
 const BIDUsers = require('./BIDUsers');
 const fetch = require('node-fetch');
+const WTM = require('./WTM');
 
 const cache = new NodeCache({ stdTTL: 10 * 60 });
 
@@ -176,7 +177,92 @@ const pollSession = async (tenantInfo, sessionId, fetchProfile, fetchDevices) =>
   }
 }
 
+const fetchSessionInfo = async (tenantInfo, sessionId) => {
+  try {
+    const sd = await BIDTenant.getSD(tenantInfo);
+
+    let api_response = await WTM.executeRequest({
+      method: 'get',
+      url: sd.sessions + "/session/" + sessionId,
+      keepAlive: true
+    });
+
+    let status = api_response.status;
+
+    if (status === 200) {
+      api_response = api_response.json;
+      api_response.status = status;
+    }
+
+    return api_response;
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+const authenticateSession = async (tenantInfo, sessionId, publicKey, appid, did, data, ialOrNull, eventDataOrNull) => {
+  try {
+
+    const keySet = BIDTenant.getKeySet();
+    const sd = await BIDTenant.getSD(tenantInfo);
+
+    let sessionsPublicKey = await getSessionPublicKey(tenantInfo);
+
+    let req = {
+      data,
+      publicKey,
+      did,
+      appid
+    }
+
+    if (ialOrNull !== null) {
+      req.ial = ialOrNull;
+    }
+
+    if (eventDataOrNull !== null) {
+      req.eventData = eventDataOrNull;
+    }
+
+    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
+
+    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
+      ts: Math.round(new Date().getTime() / 1000),
+      appid: 'fixme',
+      uuid: uuidv4()
+    }), sharedKey);
+
+    let headers = {
+      'Content-Type': 'application/json',
+      'charset': 'utf-8',
+      publickey: keySet.pKey,
+      requestid: encryptedRequestId
+    }
+
+    let api_response = await WTM.executeRequest({
+      method: 'post',
+      url: sd.sessions + "/session/" + sessionId + "/authenticate",
+      body: req,
+      headers,
+      keepAlive: true
+    });
+
+    let status = api_response.status;
+
+    if (status === 200) {
+      api_response = api_response.json;
+      api_response.status = status;
+    }
+
+    return api_response;
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   createNewSession,
-  pollSession
+  pollSession,
+  fetchSessionInfo,
+  authenticateSession
 }
