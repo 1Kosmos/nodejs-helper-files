@@ -42,10 +42,15 @@ let verifyOtpResponse = await BIDOTP.verifyOTP({ "dns": "<dns>", "communityName"
 ```
 
 - Create new UWL2.0 session
+  - (new) supports additional set of k/v pairs as metadata to be passed into the session. This can be used to transmit supplemental information like
+    - purpose of the uwl session (eg: `authentication`, `hotel-checkin`)
+    - ip of the requesting web page
+    - dns of the requesting web page etc.
+  Depending on the implementation of the authenticator app, a user can be presented this additional info.
 ```
 const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
 
-let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<authType>", "<scopes>");
+let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<authType>", "<scopes>", "<metadata>");
 ```
 
 - Poll for UWL2.0 session response
@@ -53,6 +58,27 @@ let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>"
 const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
 
 let authSessionRespone = await BIDSessions.pollSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>", true, true);
+```
+- Fetch UWL2.0 session info
+```
+const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
+
+let sessionInfo = await BIDSessions.fetchSessionInfo({ "dns": "<dns>", "communityName": "<communityName>" } , <sessionId>);
+```
+
+- Submit UWL2.0 session authentication data
+  - Details on the parameters
+    - sessionId: Id of session to submit auth data is type of string and required.
+    - publicKey: The callers publicKey is type of string and required.
+    - appId: The appId is type of string and required.
+    - did: The user did is type of string and required
+    - data: The authentication data to be submitted is of the string type and is required.
+    - ial: The ial is type of string and optional
+    - eventData: The eventData is type of string and optional
+```
+const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
+
+let authenticatedResponse = await BIDSessions.authenticateSession({ "dns": "<dns>", "communityName": "<communityName>" }, <sessionId>, <publicKey>, <appId>, <did>, <data>, <ial>, <eventData>);
 ```
 
 - FIDO device registration options
