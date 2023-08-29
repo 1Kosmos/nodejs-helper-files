@@ -94,7 +94,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
     if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 
 };
 
@@ -160,7 +160,7 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     if (ret && ret.json && ret.json.isAuthorized === true) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 };
 
 const getU1CurrentLicense = async (licenseKey, serviceUrl, requestID = uuidv4(), senderId, Logger) => {
@@ -200,7 +200,7 @@ const getU1CurrentLicense = async (licenseKey, serviceUrl, requestID = uuidv4(),
     if (ret && ret.json && ret.json.disabled === false && ret.json.keySecret === licenseKey) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 
 };
 
@@ -243,7 +243,7 @@ const checkU1CommunityLicense = async (licenseKey, communityId, serviceUrl, requ
     if (ret && ret.json && ret.json.isAuthorized === true) {
         return ret.json;
     }
-    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License'};
+    throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 };
 
 module.exports = {
