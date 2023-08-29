@@ -28,12 +28,18 @@ request object
 const executeRequest = async (object) => {
 
     let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null;
+    let logger = object.logger ? object.logger : object.Logger
+
+    if (logger) {
+        logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} w/ keepAlive: ${ object.keepAlive ? 'enabled' : 'disabled'} will use cache: ${cachedData ? "yes" : "no"}`);
+    }
+
+
     if (cachedData) {
-        if (object.Logger) {
-            object.Logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} skipped and using cache, with keep-alive ${object.keepAlive ? 'enabled' : 'disabled'}`);
-        }
         return cachedData;
     }
+
+    let t0 = Date.now();
 
     let request = {
         method: object.method
@@ -60,10 +66,6 @@ const executeRequest = async (object) => {
         request.timeout = object.timeout;
     }
 
-    if (object.Logger) {
-        object.Logger.info(`WTM ${object.method} calling to URL: ${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'}, with keep-alive ${object.keepAlive ? 'enabled' : 'disabled'}`);
-    }
-
     let ret = {};
     let api_response = await fetch(object.url, request);
     if (api_response) {
@@ -73,8 +75,8 @@ const executeRequest = async (object) => {
             ret.json = JSON.parse(ret.text);
         } catch (error) {
             //ret.error = error; //MK: SEP/2 this is not supposed to be an error
-            if (object.Logger) {
-                object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
+            if (logger) {
+                logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
             }
         }
     }
@@ -84,8 +86,8 @@ const executeRequest = async (object) => {
         httpStatus.FORBIDDEN,
         httpStatus.INTERNAL_SERVER_ERROR
     ]
-    if (responseStatus.includes(ret.status) && object.Logger) {
-        object.Logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
+    if (responseStatus.includes(ret.status) && logger) {
+        logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
     }
 
     if (object.cacheKey && ret.status == httpStatus.OK) {
@@ -96,6 +98,11 @@ const executeRequest = async (object) => {
         if (ret) {
             cache.set(object.cacheKey, ret, object.ttl);
         }
+    }
+
+    if (logger) {
+        let t1 = Date.now();
+        logger.info(`WTM completed for ${object.method} to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} in ${t1 - t0}`);
     }
 
     return ret;
