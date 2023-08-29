@@ -31,7 +31,7 @@ const executeRequest = async (object) => {
     let logger = object.logger ? object.logger : object.Logger
 
     if (logger) {
-        logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} w/ keepAlive: ${ object.keepAlive ? 'enabled' : 'disabled'} will use cache: ${cachedData ? "yes" : "no"}`);
+        logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} w/ keepAlive: ${ object.keepAlive ? 'enabled' : 'disabled'} will use cache: ${cachedData ? "yes" : "no"}`);
     }
 
     if (object.url.includes("caas/config/fetch")) {
@@ -81,7 +81,7 @@ const executeRequest = async (object) => {
         } catch (error) {
             //ret.error = error; //MK: SEP/2 this is not supposed to be an error
             if (logger) {
-                logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
+                logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
             }
         }
     }
@@ -92,7 +92,7 @@ const executeRequest = async (object) => {
         httpStatus.INTERNAL_SERVER_ERROR
     ]
     if (responseStatus.includes(ret.status) && logger) {
-        logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestUID ? object.requestUID : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
+        logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
     }
 
     if (object.cacheKey && ret.status == httpStatus.OK) {
