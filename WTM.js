@@ -34,11 +34,6 @@ const executeRequest = async (object) => {
         logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} w/ keepAlive: ${ object.keepAlive ? 'enabled' : 'disabled'} will use cache: ${cachedData ? "yes" : "no"}`);
     }
 
-    if (object.url.includes("caas/config/fetch")) {
-        let i = 0;
-        i++
-    }
-
 
     if (cachedData) {
         return cachedData;
