@@ -14,21 +14,21 @@ var URL = require('url');
 const httpStatus = require('http-status/lib');
 
 const getPublicKey = async (baseUrl) => {
-    const pubicKeyUrl = `${baseUrl}/publickeys`;
-    const response = await WTM.executeRequest({
-        method: 'get',
-        url: pubicKeyUrl,
-        keepAlive: true,
-        cacheKey: pubicKeyUrl,
-        ttl: 600
-    });
+	const pubicKeyUrl = `${baseUrl}/publickeys`;
+	const response = await WTM.executeRequest({
+		method: 'get',
+		url: pubicKeyUrl,
+		keepAlive: true,
+		cacheKey: pubicKeyUrl,
+		ttl: 600
+	});
 
-    const ret = response && response.json && response.json.publicKey ? response.json.publicKey : null;
-    if (!ret) {
-        Logger.debug(`reqId: ${requestId} Got response while fetching publicKey from url: ${pubicKeyUrl}, Response: ${JSON.stringify(response)}`);
-        throw new ApiError(httpStatus.NOT_FOUND, Messages.noPublicKeyFound);
-    }
-    return ret;
+	const ret = response && response.json && response.json.publicKey ? response.json.publicKey : null;
+	if (!ret) {
+		Logger.debug(`reqId: ${requestId} Got response while fetching publicKey from url: ${pubicKeyUrl}, Response: ${JSON.stringify(response)}`);
+		throw new ApiError(httpStatus.NOT_FOUND, Messages.noPublicKeyFound);
+	}
+	return ret;
 };
 
 const getVcsPublicKey = async (tenantInfo) => {
@@ -400,9 +400,9 @@ const verifyVPWithDownlaodUri = async (licenseKey, keySet, downloadUri, vp, requ
             keepAlive: true
         });
 
+        
 
-
-        return api_response.json;
+        return api_response.json;        
     } catch (error) {
         throw error;
     }

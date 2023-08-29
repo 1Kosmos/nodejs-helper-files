@@ -45,7 +45,7 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
     if (!senderId) {
         throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'senderId is required.' };
     }
-
+    
     let cacheKey = `${serviceUrl}/${licenseKey}`;
 
     let pubicKeyUrl = `${serviceUrl}/publickeys`;
@@ -95,7 +95,6 @@ const getCurrentLicense = async (licenseKey, serviceUrl, myKeyPair, requestID, s
         return ret.json;
     }
     throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
-
 };
 
 const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestID, senderId, Logger) => {
