@@ -27,7 +27,9 @@ request object
 */
 const executeRequest = async (object) => {
 
-    let cachedData = object.cacheKey ? await cache.get(object.cacheKey) : null;
+    let readFresh = object.read_fresh ? object.read_fresh : false;
+
+    let cachedData = object.cacheKey && !readFresh ? await cache.get(object.cacheKey) : null;
     let logger = object.logger ? object.logger : object.Logger
 
     if (logger) {
