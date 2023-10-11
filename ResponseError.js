@@ -13,13 +13,12 @@ class ResponseError extends Error {
         if (parentError) {
             if (parentError.errorStack) {
                 this.errorStack = parentError.errorStack;
-                this.errorStack.push(parentError);
             } else {
                 this.errorStack = [];
-                this.errorStack.push(parentError);
             }
+            this.errorStack.push(parentError);
         } 
     }
 }
 
-export default ResponseError
+module.exports = { ResponseError };

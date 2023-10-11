@@ -1,5 +1,6 @@
 'use strict';
-const ResponseCode = require('./ResponseCode');
+const {ResponseCode} = require('./ResponseCode');
+const httpStatus = require('http-status');
 
 const ResponseCodes = {
     VALIDATION_ERROR: new ResponseCode(httpStatus.BAD_REQUEST, "000001", 'Validation errors'),
