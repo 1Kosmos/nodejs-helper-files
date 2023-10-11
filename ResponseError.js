@@ -1,4 +1,4 @@
-const Initializer = require('./Initializer');
+const {Initializer} = require('./Initializer');
 
 class ResponseError extends Error {
 
