@@ -1,4 +1,6 @@
 'use strict';
+const ResponseError = require('./ResponseError');
+const {ResponseCodes} = require('./ResponseCodes');
 
 /**
  * Initializer using module pattern since language constructs prevent
@@ -9,6 +11,10 @@ const Initializer = (function() {
   
     return { // public interface
       setOrigination: function (origination) {
+        if(_origination)
+        {
+            throw new ResponseError(ResponseCodes.SERVICE_INITIALIZATION_ERROR);
+        }
         _origination = origination;
       },
 
@@ -19,4 +25,7 @@ const Initializer = (function() {
     };
   })();
 
-  export default Initializer;
+  module.exports = {
+    Initializer
+  }
+  

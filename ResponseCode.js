@@ -1,4 +1,4 @@
-
+"use strict";
 
 class ResponseCode {
 
@@ -10,4 +10,4 @@ class ResponseCode {
     }
 }
 
-export default ResponseCode;
+module.exports = { ResponseCode};
