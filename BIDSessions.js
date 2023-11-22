@@ -9,7 +9,7 @@
 const BIDECDSA = require('./BIDECDSA');
 const BIDTenant = require('./BIDTenant');
 const BIDUsers = require('./BIDUsers');
-const BIDReports = require('./BIDReports');
+const BIDEvents = require('./BIDEvents');
 const WTM = require('./WTM');
 const { v4: uuidv4 } = require('uuid');
 
@@ -175,7 +175,7 @@ const pollSession = async (tenantInfo, sessionId, fetchProfile, fetchDevices, ev
     let session_purpose = ret.sessionInfo && ret.sessionInfo.metadata ? ret.sessionInfo.metadata.purpose : null;
 
     // Report Event
-    if (session_purpose === "authenticattion") {
+    if (session_purpose === "authentication") {
       let eventData = {
         "tenant_dns": tenantInfo.dns,
         "tenant_tag": communityInfo.tenant.tenanttag,
@@ -201,7 +201,7 @@ const pollSession = async (tenantInfo, sessionId, fetchProfile, fetchDevices, ev
         }
         eventData.login_state = "FAILED"
       }
-      BIDReports.logEvent(tenantInfo, eventName, eventData, requestId);
+      BIDEvents.logEvent(tenantInfo, eventName, eventData, requestId);
     }
 
     return ret;

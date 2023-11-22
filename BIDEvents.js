@@ -31,14 +31,14 @@ const logEvent = async (tenantInfo, eventName, data, requestId) => {
         const licenseKey = tenantInfo.licenseKey;
         const sd = await BIDTenant.getSD(tenantInfo);
 
-        let reportsPublicKey = await getPublicKey(sd.reports);
+        let eventsPublicKey = await getPublicKey(sd.events);
 
-        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, reportsPublicKey);
+        let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, eventsPublicKey);
         const encryptedData = BIDECDSA.encrypt(JSON.stringify(data), sharedKey);
 
         let api_response = await WTM.executeRequest({
             method: 'put',
-            url: `${sd.reports}/tenant/${communityInfo.tenant.id}/community/${communityInfo.community.id}/event/${eventName}`,
+            url: `${sd.events}/tenant/${communityInfo.tenant.id}/community/${communityInfo.community.id}/event/${eventName}`,
             headers: {
                 'Content-Type': 'application/json',
                 charset: 'utf-8',
