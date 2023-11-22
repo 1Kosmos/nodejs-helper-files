@@ -30,9 +30,9 @@ const getPublicKey = async (baseUrl) => {
   return ret;
 };
 
-const createNewSession = async (tenantInfo, authType, scopes, metadata) => {
+const createNewSession = async (tenantInfo, authType, scopes, metadata, requestIdorNull) => {
   try {
-
+    let requestId = requestIdorNull || WTM.createRequestID();
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
     const keySet = BIDTenant.getKeySet();
     const licenseKey = tenantInfo.licenseKey;
@@ -70,7 +70,8 @@ const createNewSession = async (tenantInfo, authType, scopes, metadata) => {
       url: sd.sessions + "/session/new",
       headers,
       body: req,
-      keepAlive: true
+      keepAlive: true,
+      requestID: requestId
     });
 
     let status = api_response.status;
