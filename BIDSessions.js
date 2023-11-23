@@ -6,60 +6,41 @@
  *    https://github.com/1Kosmos/1Kosmos_License/blob/main/LICENSE.txt
  */
 "use strict";
-const { v4: uuidv4 } = require('uuid');
-const NodeCache = require('node-cache');
 const BIDECDSA = require('./BIDECDSA');
 const BIDTenant = require('./BIDTenant');
 const BIDUsers = require('./BIDUsers');
-const fetch = require('node-fetch');
+const BIDEvents = require('./BIDEvents');
 const WTM = require('./WTM');
+const { v4: uuidv4 } = require('uuid');
 
-const cache = new NodeCache({ stdTTL: 10 * 60 });
+const getPublicKey = async (baseUrl) => {
+  const pubicKeyUrl = `${baseUrl}/publickeys`;
+  const response = await WTM.executeRequest({
+    method: 'get',
+    url: pubicKeyUrl,
+    keepAlive: true,
+    cacheKey: pubicKeyUrl,
+    ttl: 86400
+  });
 
-const getSessionPublicKey = async (tenantInfo) => {
-  try {
-    const sd = await BIDTenant.getSD(tenantInfo);
-    let sessionsPublicKeyCache = cache.get(sd.sessions + "/publickeys");
-
-    if (sessionsPublicKeyCache) {
-      return sessionsPublicKeyCache;
-    }
-
-    let headers = {
-      'Content-Type': 'application/json',
-      'charset': 'utf-8',
-    }
-
-    let api_response = await fetch(sd.sessions + "/publickeys", {
-      method: 'get',
-      headers: headers
-    });
-
-    let ret = null;
-    if (api_response) {
-      api_response = await api_response.json();
-      ret = api_response.publicKey;
-      cache.set(sd.sessions + "/publickeys", ret);
-    }
-
-    return ret;
-  } catch (error) {
-    throw error;
+  const ret = response && response.json && response.json.publicKey ? response.json.publicKey : null;
+  if (!ret) {
+    throw { status: 404 , messages: 'No public key found' };
   }
+  return ret;
+};
 
-}
-
-const createNewSession = async (tenantInfo, authType, scopes, metadata) => {
+const createNewSession = async (tenantInfo, authType, scopes, metadata, requestIdorNull) => {
   try {
-
+    const requestId = requestIdorNull || WTM.createRequestID();
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
     const keySet = BIDTenant.getKeySet();
     const licenseKey = tenantInfo.licenseKey;
     const sd = await BIDTenant.getSD(tenantInfo);
 
-    let sessionsPublicKey = await getSessionPublicKey(tenantInfo);
+    const sessionsPublicKey = await getPublicKey(sd.sessions);
 
-    let req = {
+    const req = {
       origin: {
         tag: communityInfo.tenant.tenanttag,
         url: sd.adminconsole,
@@ -67,20 +48,15 @@ const createNewSession = async (tenantInfo, authType, scopes, metadata) => {
         communityId: communityInfo.community.id,
         authPage: 'blockid://authenticate'
       },
-      scopes: (scopes !== undefined && scopes !== null) ? scopes : "",
-      authtype: (authType !== undefined && authType !== null) ? authType : "none",
+      scopes: scopes || "",
+      authtype: authType || "none",
       metadata
     }
 
-    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
+    const sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
+    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify(WTM.createRequestID()), sharedKey);
 
-    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-      ts: Math.round(new Date().getTime() / 1000),
-      appid: 'fixme',
-      uuid: uuidv4()
-    }), sharedKey);
-
-    let headers = {
+    const headers = {
       'Content-Type': 'application/json',
       'charset': 'utf-8',
       publickey: keySet.pKey,
@@ -88,87 +64,137 @@ const createNewSession = async (tenantInfo, authType, scopes, metadata) => {
       requestid: encryptedRequestId
     }
 
-    let api_response = await fetch(sd.sessions + "/session/new", {
+    const api_response = await WTM.executeRequest({
       method: 'put',
-      body: JSON.stringify(req),
-      headers: headers
+      url: sd.sessions + "/session/new",
+      headers,
+      body: req,
+      keepAlive: true,
+      requestID: requestId
     });
 
-    if (api_response) {
-
-      let status = api_response.status;
-      if (status !== 201) {
-        api_response = {
-          status: status,
-          message: await api_response.text()
-        }
-        return api_response;
-      }
-
-      api_response = await api_response.json();
-      api_response.url = sd.sessions;
+    if (api_response.status !== 201) {
+      return {
+        status: api_response.status,
+        message: api_response.text
+      };
     }
 
-    return api_response;
+    let ret = api_response.json;
+    ret.url = sd.sessions;
+
+    return ret;
   } catch (error) {
     throw error;
   }
 }
 
-const pollSession = async (tenantInfo, sessionId, fetchProfile, fetchDevices) => {
+const pollSession = async (tenantInfo, sessionId, fetchProfile, fetchDevices, eventDataOrNull, requestIdorNull) => {
   try {
 
+    const requestId = requestIdorNull || WTM.createRequestID();
+    const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
     const keySet = BIDTenant.getKeySet();
     const licenseKey = tenantInfo.licenseKey;
     const sd = await BIDTenant.getSD(tenantInfo);
 
-    let sessionsPublicKey = await getSessionPublicKey(tenantInfo);
+    const sessionsPublicKey = await getPublicKey(sd.sessions);
 
-    let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
+    const sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
 
-    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-      ts: Math.round(new Date().getTime() / 1000),
-      appid: 'fixme',
-      uuid: uuidv4()
-    }), sharedKey);
+    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify(WTM.createRequestID(requestId)), sharedKey);
 
-    let headers = {
+    const headers = {
       'Content-Type': 'application/json',
       'charset': 'utf-8',
       publickey: keySet.pKey,
       licensekey: BIDECDSA.encrypt(licenseKey, sharedKey),
-      requestid: encryptedRequestId
+      requestid: encryptedRequestId,
+      addsessioninfo: 1
     }
 
-    let api_response = await fetch(sd.sessions + "/session/" + sessionId + "/response", {
+    const api_response = await WTM.executeRequest({
       method: 'get',
-      headers: headers
+      url: sd.sessions + "/session/" + sessionId + "/response",
+      headers,
+      keepAlive: true,
+      requestID: requestId,
     });
 
-    let ret = null;
-    if (api_response) {
-
-      let status = api_response.status;
-      if (status !== 200) {
-        ret = {
-          status: status,
-          message: await api_response.text()
-        }
-        return ret;
+    const status = api_response.status;
+    if (status !== 200) {
+      return {
+        status: status,
+        message: api_response.text
       }
+    }
 
-      ret = await api_response.json();
-      ret.status = status;
+    let ret = api_response.json;
+    ret.status = status;
 
-      if (ret.data) {
-        let clientSharedKey = BIDECDSA.createSharedKey(keySet.prKey, ret.publicKey);
-        let dec_data = BIDECDSA.decrypt(ret.data, clientSharedKey);
-        ret.user_data = JSON.parse(dec_data);
+    if (!ret.data) {
+      return {
+        status: 401,
+        message: "Session data not found"
       }
+    }
+
+    const clientSharedKey = BIDECDSA.createSharedKey(keySet.prKey, ret.publicKey);
+    const dec_data = BIDECDSA.decrypt(ret.data, clientSharedKey);
+    ret.user_data = JSON.parse(dec_data);
+    delete ret.user_data.did;
+    if (!ret.user_data.hasOwnProperty("did")) {
+      ret.status = 401;
+      return ret;
     }
 
     if (ret && ret.user_data && ret.user_data.did && fetchProfile === true) {
       ret.account_data = await BIDUsers.fetchUserByDID(tenantInfo, ret.user_data.did, fetchDevices);
+    }
+
+    //check if authenticator response is authorized.
+    const userIdList = ret.account_data ? ret.account_data.userIdList : [];
+    if (ret.user_data.userid == null && userIdList.length > 0) {
+      ret.user_data.userid = userIdList[0]
+    }
+
+    if (userIdList.indexOf(ret.user_data.userid) > 0) {
+      ret.isValid = true;
+    } else {//this covers pon not found, ponUsers empty and ponUsers does not carry mobile user
+      ret.status = 401;
+      ret.isValid = false;
+      ret.message = "Unauthorized user";
+    }
+
+    const session_purpose = ret.sessionInfo && ret.sessionInfo.metadata ? ret.sessionInfo.metadata.purpose : null;
+
+    // Report Event
+    if (session_purpose === "authentication") {
+      let eventData = {
+        "tenant_dns": tenantInfo.dns,
+        "tenant_tag": communityInfo.tenant.tenanttag,
+        "service_name": "NodeJS Helper",
+        "auth_method": "qr",
+        "type": "event",
+        "event_id": uuidv4(),
+        "version": "v1",
+        "session_id": sessionId,
+        "did": ret.user_data.did,
+        "auth_public_key": ret.publicKey,
+        "user_id": ret.user_data.userid,
+        "login_state": "SUCCESS",
+        ...eventDataOrNull
+      }
+
+      const eventName = ret.isValid ? "E_LOGIN_SUCCEEDED" : "E_LOGIN_FAILED";
+
+      if (!ret.isValid) {
+        eventData.reason = {
+          reason: "User not found in PON data"
+        }
+        eventData.login_state = "FAILED"
+      }
+      BIDEvents.logEvent(tenantInfo, eventName, eventData, requestId);
     }
 
     return ret;
@@ -207,7 +233,7 @@ const authenticateSession = async (tenantInfo, sessionId, publicKey, appid, did,
     const keySet = BIDTenant.getKeySet();
     const sd = await BIDTenant.getSD(tenantInfo);
 
-    let sessionsPublicKey = await getSessionPublicKey(tenantInfo);
+    let sessionsPublicKey = await getPublicKey(sd.sessions);
 
     let req = {
       data,
@@ -226,11 +252,7 @@ const authenticateSession = async (tenantInfo, sessionId, publicKey, appid, did,
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, sessionsPublicKey);
 
-    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-      ts: Math.round(new Date().getTime() / 1000),
-      appid: 'fixme',
-      uuid: uuidv4()
-    }), sharedKey);
+    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify(WTM.createRequestID()), sharedKey);
 
     let headers = {
       'Content-Type': 'application/json',

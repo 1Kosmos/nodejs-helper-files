@@ -47,17 +47,28 @@ let verifyOtpResponse = await BIDOTP.verifyOTP({ "dns": "<dns>", "communityName"
     - ip of the requesting web page
     - dns of the requesting web page etc.
   Depending on the implementation of the authenticator app, a user can be presented this additional info.
+  - Request Params details:
+    - requestId must be object (keys as shown below) or null
+      - uuid: unique id
+      - appid: caller application name or id
 ```
 const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
 
-let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<authType>", "<scopes>", "<metadata>");
+let createdSessionResponse = await BIDSessions.createNewSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<authType>", "<scopes>", "<metadata>", "<requestId>");
 ```
 
 - Poll for UWL2.0 session response
+ - If pon does not exist, ponUsers is empty, or ponUsers does not contain a mobile user, the method will return isValid: false with other data .
+ - When a user provides purpose, the function will return a sessionInfo property containing session data.
+ - Request Params details:
+    - eventData should be object or null. This can be used to report an event.
+    - requestId must be object (keys as shown below) or null
+      - uuid: unique id
+      - appid: caller application name or id
 ```
 const BIDSessions = require('blockid-nodejs-helpers/BIDSessions');
 
-let authSessionRespone = await BIDSessions.pollSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>", true, true);
+let authSessionRespone = await BIDSessions.pollSession({ "dns": "<dns>", "communityName": "<communityName>", "lecenseKey": "<lecenseKey>" }, "<sessionId>", true, true, "<eventData>", "<requestId>");
 ```
 - Fetch UWL2.0 session info
 ```

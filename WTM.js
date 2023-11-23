@@ -10,8 +10,16 @@ const fetch = require('node-fetch');
 const NodeCache = require('node-cache');
 const httpStatus = require('http-status');
 const keepAliveAgent = require('./KeepAliveAgent');
-
+const { v4: uuidv4 } = require('uuid');
 const cache = new NodeCache();
+
+const createRequestID = (requestId = {}) => {
+    const ts = Math.round(new Date().getTime() / 1000);
+    const uuid = requestId.uuid || uuidv4();
+    const appid = 'com.1kosmos.nodejs-helper.request';
+
+    return { ...requestId, ts, uuid, appid };
+};
 /*
 request object 
 {
@@ -112,5 +120,6 @@ const executeRequest = async (object) => {
 
 
 module.exports = {
-    executeRequest
+    executeRequest,
+    createRequestID
 };
