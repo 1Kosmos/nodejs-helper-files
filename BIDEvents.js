@@ -54,7 +54,7 @@ const logEvent = async (tenantInfo, eventName, data, requestId) => {
         });
         return api_response.json;
     } catch (error) {
-        return { error }
+        return { error: error }
     }
 };
 
