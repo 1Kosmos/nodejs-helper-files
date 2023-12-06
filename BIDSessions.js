@@ -142,9 +142,10 @@ const pollSession = async (tenantInfo, sessionId, fetchProfile, fetchDevices, ev
     const clientSharedKey = BIDECDSA.createSharedKey(keySet.prKey, ret.publicKey);
     const dec_data = BIDECDSA.decrypt(ret.data, clientSharedKey);
     ret.user_data = JSON.parse(dec_data);
-    delete ret.user_data.did;
+
     if (!ret.user_data.hasOwnProperty("did")) {
       ret.status = 401;
+      ret.message = "Unauthorized user";
       return ret;
     }
 
