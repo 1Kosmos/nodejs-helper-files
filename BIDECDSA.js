@@ -96,8 +96,9 @@ module.exports = {
   },
 
   createWallet: function () {
-		const { address, _signingKey } = ethers.Wallet.createRandom();
+		const { address, _signingKey, _mnemonic } = ethers.Wallet.createRandom();
 		const { publicKey, privateKey } = _signingKey();
+    const { phrase } = _mnemonic();
 		const privateKeyByteArray = ethers.utils.arrayify(privateKey);
 		let publicKeyByteArray = ethers.utils.arrayify(publicKey);
 
@@ -112,7 +113,8 @@ module.exports = {
 		return {
 			did: did.toLowerCase(),
 			publicKey: publicKeyBase64,
-			privateKey: privateKeyBase64
+			privateKey: privateKeyBase64,
+      mnemonic: phrase
 		}
 	}
   
