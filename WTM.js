@@ -109,6 +109,12 @@ const executeRequest = async (object) => {
             cache.set(object.cacheKey, ret, object.ttl);
         }
     }
+    if (object.deleteCacheKey && ret.status == httpStatus.OK || ret.status == httpStatus.NO_CONTENT) {
+        logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'}  removing cache`);
+
+        const countDeleted = cache.del(object.deleteCacheKey);
+        logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'}  removed cache: ${countDeleted}}`);
+    }
 
     if (logger) {
         let t1 = Date.now();
