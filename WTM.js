@@ -34,11 +34,16 @@ request object
 }
 */
 const executeRequest = async (object) => {
+    let logger = object.logger ? object.logger : object.Logger
+
+    if (object.deleteCacheKey) {
+        const countDeleted = cache.del(object.deleteCacheKey);
+        logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'}  removed cache: ${countDeleted}}`);
+    }
 
     let readFresh = object.read_fresh ? object.read_fresh : false;
 
     let cachedData = object.cacheKey && !readFresh ? await cache.get(object.cacheKey) : null;
-    let logger = object.logger ? object.logger : object.Logger
 
     if (logger) {
         logger.info(`WTM ${object.method} call to URL: ${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} w/ keepAlive: ${ object.keepAlive ? 'enabled' : 'disabled'} will use cache: ${cachedData ? "yes" : "no"}`);

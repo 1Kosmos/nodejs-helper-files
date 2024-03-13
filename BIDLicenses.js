@@ -162,6 +162,66 @@ const checkCommunityLicense = async (licenseKey, communityId, serviceUrl, myKeyP
     throw { statusCode: httpStatus.UNAUTHORIZED, code: httpStatus.UNAUTHORIZED, messages: 'Invalid or Unauthorized License' };
 };
 
+const deleteLicense = async (licenseKey, communityId, serviceUrl, myKeyPair, requestID, senderId, Logger) => {
+    if (!requestID || (requestID && !requestID.uuid)) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'RequestId is required.' };
+    }
+    if (!senderId) {
+        throw { statusCode: httpStatus.BAD_REQUEST, code: httpStatus.BAD_REQUEST, messages: 'senderId is required.' };
+    }
+
+    const license = await getCurrentLicense(licenseKey, serviceUrl, myKeyPair, requestID, senderId, Logger);
+    if (license && license.code !== undefined && license.code !== httpStatus.OK) {
+        Logger.info(`BIDLicenses - deleteLicense license is not found requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)}`);
+        return;
+    }
+
+    Logger.info(`BIDLicenses - deleteLicense license keyId ${license.keyId} found  requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)}`);
+
+    let pubicKeyUrl = `${serviceUrl}/publickeys`;
+    let publicKey = (await WTM.executeRequest({
+        method: 'get',
+        url: pubicKeyUrl,
+        keepAlive: true,
+        Logger,
+        requestID,
+        cacheKey: pubicKeyUrl,
+        ttl: 600
+    })).json.publicKey;
+
+    let sharedKey = BIDECDSA.createSharedKey(myKeyPair.keySecret, publicKey);
+
+    const requestId = requestID;
+    requestId.uuid = requestID.uuid
+    requestId.appid = senderId
+    requestId.ts = Math.round(new Date().getTime() / 1000)
+
+    const infraKey = makeInfraKey();
+    const headers = {
+        licensekey: BIDECDSA.encrypt(infraKey.keySecret, sharedKey),
+        requestid: BIDECDSA.encrypt(JSON.stringify(requestId), sharedKey),
+        publickey: myKeyPair.keyId
+    };
+
+    let url = `${serviceUrl}/servicekey?keyId=${license.keyId}`;
+    let cacheKey1 = `${serviceUrl}/${licenseKey}`;
+    let cacheKey2 = `${serviceUrl}/${communityId}/${licenseKey}`;
+    Logger.info(`BIDLicenses - deleteLicense calling WTM for requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'} for Hash: ${sha512(licenseKey)}, keyId ${license.keyId}calling URL: ${url} `);
+
+    let ret = (await WTM.executeRequest({
+        method: 'delete',
+        url: url,
+        keepAlive: true,
+        Logger,
+        requestID,
+        headers: headers,
+        deleteCacheKey: [cacheKey1, cacheKey2]
+    }));
+    Logger.info(`BIDLicenses - deleteLicense ret: ${JSON.stringify(ret)} requestId: ${requestID ? JSON.stringify(requestID) : 'n/a'}`)
+
+    return ret;
+};
+
 const getU1CurrentLicense = async (licenseKey, serviceUrl, requestID = uuidv4(), senderId, Logger) => {
 
     const infraKey = makeInfraKey();
@@ -250,5 +310,6 @@ module.exports = {
     getCurrentLicense,
     checkCommunityLicense,
     getU1CurrentLicense,
-    checkU1CommunityLicense
+    checkU1CommunityLicense,
+    deleteLicense
 };
