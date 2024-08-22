@@ -5,21 +5,21 @@
     "description": "a Sails application",
     "keywords": [],
     "dependencies": {
-      "ethers": "^6.13.0"
+        "ethers": "^6.13.0"
     },
     "devDependencies": {
-      "ethers": "^6.13.0",
-      "uuid": "8.3.2",
-      "node-cache": "5.1.2",
-      "node-fetch": "2.6.1",
-      "http-status": "1.4.0",
-      "moment": "^2.29.3",
-      "js-sha512": "^0.8.0"
-      },
+        "ethers": "^6.13.0",
+        "http-status": "1.4.0",
+        "js-sha512": "^0.8.0",
+        "moment": "^2.29.3",
+        "node-cache": "5.1.2",
+        "node-fetch": "2.6.1",
+        "uuid": "8.3.2"
+    },
     "repository": {
-      "type": "git",
-      "url": "git://github.com1KBlockID/nodejs-helper-files.git"
+        "type": "git",
+        "url": "git://github.com1KBlockID/nodejs-helper-files.git"
     },
     "author": "manikkakar",
     "license": ""
-  }
+}
