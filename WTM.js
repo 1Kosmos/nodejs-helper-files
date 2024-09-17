@@ -90,21 +90,25 @@ const executeRequest = async (object) => {
 
         if (hostMapping?.[dns]) {
           object.url = object.url.replace(dns, hostMapping[dns]);
-          logger.info(
-            `URL updated using host mapping. Original host: ${dns}, Mapped to: ${
-              hostMapping[dns]
-            }, Updated URL: ${object.url}, requestId: ${
-              object.requestID || "n/a"
-            }`
-          );
+          if (logger) {
+            logger.info(
+              `URL updated using host mapping. Original host: ${dns}, Mapped to: ${
+                hostMapping[dns]
+              }, Updated URL: ${object.url}, requestId: ${
+                object.requestID || "n/a"
+              }`
+            );
+          }
         }
       } catch (error) {
         console.log(error);
-        logger.info(
-          `Failed to apply host mapping. Error: ${error.message}, requestId: ${
-            object.requestID || "n/a"
-          }`
-        );
+        if (logger) {
+          logger.info(
+            `Failed to apply host mapping. Error: ${
+              error.message
+            }, requestId: ${object.requestID || "n/a"}`
+          );
+        }
       }
     }
 
