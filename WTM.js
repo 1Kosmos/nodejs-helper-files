@@ -99,7 +99,8 @@ const executeRequest = async (object) => {
           );
         }
       } catch (error) {
-        logger.error(
+        console.log(error);
+        logger.info(
           `Failed to apply host mapping. Error: ${error.message}, requestId: ${
             object.requestID || "n/a"
           }`
