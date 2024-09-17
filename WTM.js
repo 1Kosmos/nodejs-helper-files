@@ -13,6 +13,8 @@ const keepAliveAgent = require('./KeepAliveAgent');
 const { v4: uuidv4 } = require('uuid');
 const cache = new NodeCache();
 
+const hostMappingString = Buffer.from(process.env.HOST_MAPPING || '', 'base64').toString('utf-8');
+
 const createRequestID = (requestId = {}) => {
     const ts = Math.round(new Date().getTime() / 1000);
     const uuid = requestId.uuid || uuidv4();
@@ -79,6 +81,16 @@ const executeRequest = async (object) => {
 
     if (object.timeout !== undefined) {
         request.timeout = object.timeout;
+    }
+
+    if(hostMappingString) {
+        const hostMapping = JSON.parse(hostMappingString);
+        const dns = new URL(object.url).hostname;
+
+       if(hostMapping[dns]){
+        object.url = object.url.replace(dns, hostMapping[dns]);
+        logger.info(`WTM replaced URL with host mapping :${object.url}, requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'}}`);
+       }
     }
 
     let ret = {};
