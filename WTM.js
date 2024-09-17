@@ -83,14 +83,28 @@ const executeRequest = async (object) => {
         request.timeout = object.timeout;
     }
 
-    if(hostMappingString) {
+    if (hostMappingString) {
+      try {
         const hostMapping = JSON.parse(hostMappingString);
         const dns = new URL(object.url).hostname;
 
-       if(hostMapping[dns]){
-        object.url = object.url.replace(dns, hostMapping[dns]);
-        logger.info(`WTM replaced URL with host mapping :${object.url}, requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'}}`);
-       }
+        if (hostMapping?.[dns]) {
+          object.url = object.url.replace(dns, hostMapping[dns]);
+          logger.info(
+            `URL updated using host mapping. Original host: ${dns}, Mapped to: ${
+              hostMapping[dns]
+            }, Updated URL: ${object.url}, requestId: ${
+              object.requestID || "n/a"
+            }`
+          );
+        }
+      } catch (error) {
+        logger.error(
+          `Failed to apply host mapping. Error: ${error.message}, requestId: ${
+            object.requestID || "n/a"
+          }`
+        );
+      }
     }
 
     let ret = {};
