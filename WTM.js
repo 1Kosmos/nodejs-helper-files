@@ -92,21 +92,22 @@ const executeRequest = async (object) => {
           object.url = object.url.replace(dns, hostMapping[dns]);
           if (logger) {
             logger.info(
-              `URL updated using host mapping. Original host: ${dns}, Mapped to: ${
+              `WTM URL updated using host mapping. Original host: ${dns}, Mapped to: ${
                 hostMapping[dns]
               }, Updated URL: ${object.url}, requestId: ${
-                object.requestID || "n/a"
+                object.requestID ? JSON.stringify(object.requestID) : "n/a"
               }`
             );
           }
         }
       } catch (error) {
-        console.log(error);
         if (logger) {
           logger.info(
-            `Failed to apply host mapping. Error: ${
+            `WTM Failed to apply host mapping. Error: ${
               error.message
-            }, requestId: ${object.requestID || "n/a"}`
+            }, requestId: ${
+              object.requestID ? JSON.stringify(object.requestID) : "n/a"
+            }`
           );
         }
       }
