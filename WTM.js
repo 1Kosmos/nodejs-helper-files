@@ -83,11 +83,15 @@ const executeRequest = async (object) => {
         request.timeout = object.timeout;
     }
 
+    /**
+     * Added host mapping support for multi-site hosting
+     */
     if (hostMappingString) {
       try {
         const hostMapping = JSON.parse(hostMappingString);
         const dns = new URL(object.url).hostname;
 
+        // Verify that the requested DNS/Host is configured in HOST_MAPPING
         if (hostMapping?.[dns]) {
           object.url = object.url.replace(dns, hostMapping[dns]);
           if (logger) {
