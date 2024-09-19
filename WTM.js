@@ -13,6 +13,10 @@ const keepAliveAgent = require('./KeepAliveAgent');
 const { v4: uuidv4 } = require('uuid');
 const cache = new NodeCache();
 
+const hostMappingString = Buffer.from(process.env.HOST_MAPPING || '', 'base64').toString('utf-8');
+const hostMap = hostMappingString ? JSON.parse(hostMappingString) : null;
+
+
 const createRequestID = (requestId = {}) => {
     const ts = Math.round(new Date().getTime() / 1000);
     const uuid = requestId.uuid || uuidv4();
@@ -79,6 +83,39 @@ const executeRequest = async (object) => {
 
     if (object.timeout !== undefined) {
         request.timeout = object.timeout;
+    }
+
+    /**
+     * Added host mapping support for multi-site hosting
+     */
+    if (hostMap) {
+      try {
+        const host = new URL(object.url).hostname;
+
+        // Verify that the requested Host is configured in HOST_MAPPING
+        if (hostMap?.[host]) {
+          object.url = object.url.replace(host, hostMap[host]);
+          if (logger) {
+            logger.info(
+              `WTM URL updated using host map. Original host: ${host}, Mapped as: ${
+                hostMap[host]
+              }, Updated URL: ${object.url}, requestId: ${
+                object.requestID ? JSON.stringify(object.requestID) : 'n/a'
+              }`
+            );
+          }
+        }
+      } catch (error) {
+        if (logger) {
+          logger.info(
+            `WTM Failed to apply host map. Error: ${
+              error.message
+            }, requestId: ${
+              object.requestID ? JSON.stringify(object.requestID) : 'n/a'
+            }`
+          );
+        }
+      }
     }
 
     let ret = {};
