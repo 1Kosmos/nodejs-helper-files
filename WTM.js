@@ -100,7 +100,7 @@ const executeRequest = async (object) => {
               `WTM URL updated using host map. Original host: ${host}, Mapped as: ${
                 hostMap[host]
               }, Updated URL: ${object.url}, requestId: ${
-                object.requestID ? JSON.stringify(object.requestID) : "n/a"
+                object.requestID ? JSON.stringify(object.requestID) : 'n/a'
               }`
             );
           }
@@ -111,7 +111,7 @@ const executeRequest = async (object) => {
             `WTM Failed to apply host map. Error: ${
               error.message
             }, requestId: ${
-              object.requestID ? JSON.stringify(object.requestID) : "n/a"
+              object.requestID ? JSON.stringify(object.requestID) : 'n/a'
             }`
           );
         }
