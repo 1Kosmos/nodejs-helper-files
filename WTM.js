@@ -14,6 +14,8 @@ const { v4: uuidv4 } = require('uuid');
 const cache = new NodeCache();
 
 const hostMappingString = Buffer.from(process.env.HOST_MAPPING || '', 'base64').toString('utf-8');
+const hostMap = hostMappingString ? JSON.parse(hostMappingString) : null;
+
 
 const createRequestID = (requestId = {}) => {
     const ts = Math.round(new Date().getTime() / 1000);
@@ -86,18 +88,17 @@ const executeRequest = async (object) => {
     /**
      * Added host mapping support for multi-site hosting
      */
-    if (hostMappingString) {
+    if (hostMap) {
       try {
-        const hostMapping = JSON.parse(hostMappingString);
-        const dns = new URL(object.url).hostname;
+        const host = new URL(object.url).hostname;
 
-        // Verify that the requested DNS/Host is configured in HOST_MAPPING
-        if (hostMapping?.[dns]) {
-          object.url = object.url.replace(dns, hostMapping[dns]);
+        // Verify that the requested Host is configured in HOST_MAPPING
+        if (hostMap?.[host]) {
+          object.url = object.url.replace(host, hostMap[host]);
           if (logger) {
             logger.info(
-              `WTM URL updated using host mapping. Original host: ${dns}, Mapped to: ${
-                hostMapping[dns]
+              `WTM URL updated using host map. Original host: ${host}, Mapped as: ${
+                hostMap[host]
               }, Updated URL: ${object.url}, requestId: ${
                 object.requestID ? JSON.stringify(object.requestID) : "n/a"
               }`
@@ -107,7 +108,7 @@ const executeRequest = async (object) => {
       } catch (error) {
         if (logger) {
           logger.info(
-            `WTM Failed to apply host mapping. Error: ${
+            `WTM Failed to apply host map. Error: ${
               error.message
             }, requestId: ${
               object.requestID ? JSON.stringify(object.requestID) : "n/a"
