@@ -96,27 +96,23 @@ module.exports = {
   },
 
   createWallet: function () {
-		const { address, signingKey, mnemonic } = ethers.Wallet.createRandom();
-		const { publicKey, privateKey } = signingKey;
+    const { address, signingKey, mnemonic } = ethers.Wallet.createRandom();
+    const { publicKey, privateKey } = signingKey;
     const { phrase } = mnemonic;
 
-		const privateKeyByteArray = ethers.utils.getBytes(privateKey);
-		let publicKeyByteArray = ethers.utils.getBytes(publicKey);
+    const privateKeyByteArray = ethers.getBytes(privateKey);
+    const publicKeyByteArray = ethers.getBytes(publicKey);
 
-		if (publicKeyByteArray.length > 64) {
-			publicKeyByteArray = publicKeyByteArray.slice(1);
-		}
+    const privateKeyBase64 = ethers.encodeBase64(privateKeyByteArray);
+    const publicKeyBase64 = ethers.encodeBase64(publicKeyByteArray);
 
-		const privateKeyBase64 = ethers.utils.base64.encode(privateKeyByteArray);
-		const publicKeyBase64 = ethers.utils.base64.encode(publicKeyByteArray);
-		const did = address[0] === '0' && address[1] === 'x' ? address.slice(2) : address;
+    const did = address[0] === '0' && address[1] === 'x' ? address.slice(2) : address;
 
-		return {
-			did: did.toLowerCase(),
-			publicKey: publicKeyBase64,
-			privateKey: privateKeyBase64,
+    return {
+      did: did.toLowerCase(),
+      publicKey: publicKeyBase64,
+      privateKey: privateKeyBase64,
       mnemonic: phrase
-		}
-	}
-  
+    };
+  }
 }
