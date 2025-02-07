@@ -96,11 +96,12 @@ module.exports = {
   },
 
   createWallet: function () {
-		const { address, _signingKey, _mnemonic } = ethers.Wallet.createRandom();
-		const { publicKey, privateKey } = _signingKey();
-    const { phrase } = _mnemonic();
-		const privateKeyByteArray = ethers.utils.arrayify(privateKey);
-		let publicKeyByteArray = ethers.utils.arrayify(publicKey);
+		const { address, signingKey, mnemonic } = ethers.Wallet.createRandom();
+		const { publicKey, privateKey } = signingKey;
+    const { phrase } = mnemonic;
+
+		const privateKeyByteArray = ethers.utils.getBytes(privateKey);
+		let publicKeyByteArray = ethers.utils.getBytes(publicKey);
 
 		if (publicKeyByteArray.length > 64) {
 			publicKeyByteArray = publicKeyByteArray.slice(1);
