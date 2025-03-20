@@ -97,11 +97,13 @@ module.exports = {
 
   createWallet: function () {
     const { address, signingKey, mnemonic } = ethers.Wallet.createRandom();
-    const { publicKey, privateKey } = signingKey;
+    const { privateKey } = signingKey;
     const { phrase } = mnemonic;
 
+    const uncompressedPublicKey = ethers.SigningKey.computePublicKey(privateKey, false);
+
     const privateKeyByteArray = ethers.getBytes(privateKey);
-    const publicKeyByteArray = ethers.getBytes(publicKey);
+    const publicKeyByteArray = ethers.getBytes(uncompressedPublicKey);
 
     const privateKeyBase64 = ethers.encodeBase64(privateKeyByteArray);
     const publicKeyBase64 = ethers.encodeBase64(publicKeyByteArray);
