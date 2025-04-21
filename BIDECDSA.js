@@ -96,25 +96,32 @@ module.exports = {
   },
 
   createWallet: function () {
-    const { address, signingKey, mnemonic } = ethers.Wallet.createRandom();
-    const { privateKey } = signingKey;
-    const { phrase } = mnemonic;
+    const wallet = ethers.Wallet.createRandom();
 
+    const { address, mnemonic } = wallet;
+    const { privateKey } = wallet.signingKey;
+
+    // Compute **uncompressed** public key (65 bytes, 0x04 prefix)
     const uncompressedPublicKey = ethers.SigningKey.computePublicKey(privateKey, false);
 
-    const privateKeyByteArray = ethers.getBytes(privateKey);
-    const publicKeyByteArray = ethers.getBytes(uncompressedPublicKey);
+    const privateKeyBytes = ethers.getBytes(privateKey);
+    let publicKeyBytes = ethers.getBytes(uncompressedPublicKey);
 
-    const privateKeyBase64 = ethers.encodeBase64(privateKeyByteArray);
-    const publicKeyBase64 = ethers.encodeBase64(publicKeyByteArray);
+    // Drop the 0x04 prefix if needed (like in your v5 logic)
+    if (publicKeyBytes.length > 64) {
+      publicKeyBytes = publicKeyBytes.slice(1);
+    }
 
-    const did = address[0] === '0' && address[1] === 'x' ? address.slice(2) : address;
+    const privateKeyBase64 = ethers.encodeBase64(privateKeyBytes);
+    const publicKeyBase64 = ethers.encodeBase64(publicKeyBytes);
+
+    const did = address.startsWith("0x") ? address.slice(2).toLowerCase() : address.toLowerCase();
 
     return {
-      did: did.toLowerCase(),
+      did,
       publicKey: publicKeyBase64,
       privateKey: privateKeyBase64,
-      mnemonic: phrase
+      mnemonic: mnemonic.phrase
     };
   }
 }
