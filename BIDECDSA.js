@@ -96,26 +96,33 @@ module.exports = {
   },
 
   createWallet: function () {
-		const { address, _signingKey, _mnemonic } = ethers.Wallet.createRandom();
-		const { publicKey, privateKey } = _signingKey();
-    const { phrase } = _mnemonic();
-		const privateKeyByteArray = ethers.utils.arrayify(privateKey);
-		let publicKeyByteArray = ethers.utils.arrayify(publicKey);
+    const wallet = ethers.Wallet.createRandom();
 
-		if (publicKeyByteArray.length > 64) {
-			publicKeyByteArray = publicKeyByteArray.slice(1);
-		}
+    const { address, mnemonic } = wallet;
+    const { privateKey } = wallet.signingKey;
 
-		const privateKeyBase64 = ethers.utils.base64.encode(privateKeyByteArray);
-		const publicKeyBase64 = ethers.utils.base64.encode(publicKeyByteArray);
-		const did = address[0] === '0' && address[1] === 'x' ? address.slice(2) : address;
+    // Compute **uncompressed** public key (65 bytes, 0x04 prefix)
+    const uncompressedPublicKey = ethers.SigningKey.computePublicKey(privateKey, false);
 
-		return {
-			did: did.toLowerCase(),
-			publicKey: publicKeyBase64,
-			privateKey: privateKeyBase64,
-      mnemonic: phrase
-		}
+    const privateKeyBytes = ethers.getBytes(privateKey);
+    let publicKeyBytes = ethers.getBytes(uncompressedPublicKey);
+
+    // Drop the 0x04 prefix if needed (like in your v5 logic)
+    if (publicKeyBytes.length > 64) {
+      publicKeyBytes = publicKeyBytes.slice(1);
+    }
+
+    const privateKeyBase64 = ethers.encodeBase64(privateKeyBytes);
+    const publicKeyBase64 = ethers.encodeBase64(publicKeyBytes);
+
+    const did = address.startsWith("0x") ? address.slice(2).toLowerCase() : address.toLowerCase();
+
+    return {
+      did,
+      publicKey: publicKeyBase64,
+      privateKey: privateKeyBase64,
+      mnemonic: mnemonic.phrase
+    };
   },
 
   toBase64Url(buf) {
