@@ -123,5 +123,62 @@ module.exports = {
       privateKey: privateKeyBase64,
       mnemonic: mnemonic.phrase
     };
+  },
+
+  toBase64Url(buf) {
+    return buf.toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  },
+
+  toJwkPublicKey(publicKeyBase64) {
+    const pub = Buffer.from(publicKeyBase64, 'base64');
+    if (pub.length < 64) throw new Error('Invalid publicKey length');
+
+    return {
+      kty: 'EC',
+      crv: 'secp256k1',
+      x: this.toBase64Url(pub.subarray(0, 32)),
+      y: this.toBase64Url(pub.subarray(32, 64)),
+    };
+  },
+
+  toJwkPrivateKey(privateKeyBase64, publicKeyBase64) {
+    return {
+      ...this.toJwkPublicKey(publicKeyBase64),
+      d: this.toBase64Url(Buffer.from(privateKeyBase64, 'base64')),
+    };
+  },
+
+  sign(data, privateKeyBase64, publicKeyBase64) {
+    const keyObj = crypto.createPrivateKey({
+      key: this.toJwkPrivateKey(privateKeyBase64, publicKeyBase64),
+      format: 'jwk',
+    });
+
+    const signer = crypto.createSign('SHA256');
+    signer.update(data);
+    signer.end();
+
+    return signer.sign({ key: keyObj, dsaEncoding: 'ieee-p1363' }).toString('base64');
+  },
+
+  verify(data, signatureBase64, publicKeyBase64) {
+    try {
+      const keyObj = crypto.createPublicKey({
+        key: this.toJwkPublicKey(publicKeyBase64),
+        format: 'jwk',
+      });
+
+      const verifier = crypto.createVerify('SHA256');
+      verifier.update(data);
+      verifier.end();
+
+      const signature = Buffer.from(signatureBase64, 'base64');
+      return verifier.verify({ key: keyObj, dsaEncoding: 'ieee-p1363' }, signature);
+    } catch (error){
+      throw error;
+    }
   }
 }
