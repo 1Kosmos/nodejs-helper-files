@@ -170,8 +170,8 @@ module.exports = {
 
       const signature = Buffer.from(signatureBase64, 'base64');
       return verifier.verify({ key: keyObj, dsaEncoding: 'ieee-p1363' }, signature);
-    } catch {
-      return false;
+    } catch (error){
+      throw error;
     }
   }
   
