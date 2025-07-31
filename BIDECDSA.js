@@ -8,7 +8,8 @@
 const crypto = require('crypto');
 const ALGO = 'aes-256-gcm';
 const ethers = require('ethers');
-const jwkToPem = require('jwk-to-pem');
+const EC = require('elliptic').ec;
+const ec = new EC('secp256k1');
 
 //ref original https://gist.github.com/rjz/15baffeab434b8125ca4d783f4116d81
 
@@ -129,53 +130,28 @@ module.exports = {
   toBase64Url: function (buf) {
     return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   },
-  
-  toJwkPrivateKey: function(privateKeyBase64, publicKeyBase64) {
-    const pub = Buffer.from(publicKeyBase64, 'base64');
-    return {
-      kty: 'EC',
-      crv: 'secp256k1',
-      d: toBase64Url(Buffer.from(privateKeyBase64, 'base64')),
-      x: toBase64Url(pub.slice(0, 32)),
-      y: toBase64Url(pub.slice(32, 64)),
-    };
-  },
-  
-  toJwkPublicKey: function (publicKeyBase64) {
-    const pub = Buffer.from(publicKeyBase64, 'base64');
-    return {
-      kty: 'EC',
-      crv: 'secp256k1',
-      x: toBase64Url(pub.slice(0, 32)),
-      y: toBase64Url(pub.slice(32, 64)),
-    };
-  },
-  
-  sign: function(data, privateKeyBase64, publicKeyBase64) {
-    const jwk = toJwkPrivateKey(privateKeyBase64, publicKeyBase64);
-    const pem = jwkToPem(jwk, { private: true });
 
-    const sign = crypto.createSign('SHA256');
-    sign.update(data);
-    sign.end();
-
-    const signature = sign.sign({ key: pem, dsaEncoding: 'ieee-p1363' });
-    return signature.toString('base64');
+  sign: function (data, privateKeyBase64) {
+    const privKey = Buffer.from(privateKeyBase64, 'base64').toString('hex');
+    const key = ec.keyFromPrivate(privKey, 'hex');
+    const hash = crypto.createHash('sha256').update(data).digest();
+    const signature = key.sign(hash, { canonical: true });
+    const sigBytes = Buffer.concat([
+      signature.r.toArrayLike(Buffer, 'be', 32),
+      signature.s.toArrayLike(Buffer, 'be', 32),
+    ]);
+    return sigBytes.toString('base64');
   },
-  
-  verify: function(data, signatureBase64, publicKeyBase64) {
-    try{
-      const jwk = toJwkPublicKey(publicKeyBase64);
-      const pem = jwkToPem(jwk);
-    
-      const verify = crypto.createVerify('SHA256');
-      verify.update(data);
-      verify.end();
-    
-      const signature = Buffer.from(signatureBase64, 'base64');
-      return verify.verify({ key: pem, dsaEncoding: 'ieee-p1363' }, signature);
-    } catch (error){
-      throw error;
-    }
+
+  verify: function (data, signatureBase64, publicKeyBase64) {
+    const pub = Buffer.from(publicKeyBase64, 'base64');
+    const x = pub.slice(0, 32).toString('hex');
+    const y = pub.slice(32, 64).toString('hex');
+    const key = ec.keyFromPublic({ x, y }, 'hex');
+    const hash = crypto.createHash('sha256').update(data).digest();
+    const signature = Buffer.from(signatureBase64, 'base64');
+    const r = signature.slice(0, 32);
+    const s = signature.slice(32, 64);
+    return key.verify(hash, { r, s });
   }
-}
+} 
