@@ -8,8 +8,6 @@
 const crypto = require('crypto');
 const ALGO = 'aes-256-gcm';
 const ethers = require('ethers');
-const EC = require('elliptic').ec;
-const ec = new EC('secp256k1');
 
 //ref original https://gist.github.com/rjz/15baffeab434b8125ca4d783f4116d81
 
@@ -143,13 +141,13 @@ module.exports = {
     const privBuf = this.base64ToBuffer(privateKeyBase64);
     if (privBuf.length !== 32) throw new Error("Invalid private key length");
 
-    const key = ec.keyFromPrivate(privBuf);
-    const hash = crypto.createHash("sha256").update(message).digest();
-    const signature = key.sign(hash);
-
-    const r = signature.r.toArrayLike(Buffer, "be", 32);
-    const s = signature.s.toArrayLike(Buffer, "be", 32);
-    return Buffer.concat([r, s]).toString("base64");
+    // Create PEM for secp256k1 private key
+    const pem = `-----BEGIN PRIVATE KEY-----\n${privBuf.toString("base64")}\n-----END PRIVATE KEY-----`;
+    const sign = crypto.createSign("SHA256");
+    sign.update(message);
+    sign.end();
+    const signature = sign.sign({ key: pem, format: "pem", type: "pkcs8" });
+    return signature.toString("base64");
   },
 
   verify(message, signatureBase64, publicKeyBase64) {
@@ -157,13 +155,12 @@ module.exports = {
     const pubBuf = this.base64ToBuffer(publicKeyBase64);
     if (pubBuf.length !== 64) throw new Error("Invalid public key length");
 
-    const x = pubBuf.slice(0, 32).toString("hex");
-    const y = pubBuf.slice(32).toString("hex");
-    const key = ec.keyFromPublic({ x, y }, "hex");
-
-    const hash = crypto.createHash("sha256").update(message).digest();
-    const r = sigBuf.slice(0, 32);
-    const s = sigBuf.slice(32);
-    return key.verify(hash, { r, s });
+    // Create PEM for secp256k1 public key
+    const pubHex = Buffer.concat([Buffer.from([0x04]), pubBuf]).toString("base64");
+    const pem = `-----BEGIN PUBLIC KEY-----\n${pubHex}\n-----END PUBLIC KEY-----`;
+    const verify = crypto.createVerify("SHA256");
+    verify.update(message);
+    verify.end();
+    return verify.verify({ key: pem, format: "pem", type: "spki" }, sigBuf);
   },
 };
