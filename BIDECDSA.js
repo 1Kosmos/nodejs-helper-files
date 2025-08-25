@@ -137,30 +137,88 @@ module.exports = {
     return Buffer.from(base64, "base64");
   },
 
-  sign(message, privateKeyBase64) {
+  privateKeyRawToPEM: function (privateKeyBase64) {
     const privBuf = this.base64ToBuffer(privateKeyBase64);
     if (privBuf.length !== 32) throw new Error("Invalid private key length");
 
-    // Create PEM for secp256k1 private key
-    const pem = `-----BEGIN PRIVATE KEY-----\n${privBuf.toString("base64")}\n-----END PRIVATE KEY-----`;
-    const sign = crypto.createSign("SHA256");
-    sign.update(message);
-    sign.end();
-    const signature = sign.sign({ key: pem, format: "pem", type: "pkcs8" });
-    return signature.toString("base64");
+    const ecPrivateKeyDER = Buffer.concat([
+      Buffer.from("302e0201010420", "hex"),
+      privBuf,
+      Buffer.from("a00706052b8104000a", "hex"),
+    ]);
+
+    return crypto.createPrivateKey({
+      key: ecPrivateKeyDER,
+      format: "der",
+      type: "sec1",
+    });
   },
 
-  verify(message, signatureBase64, publicKeyBase64) {
-    const sigBuf = this.base64ToBuffer(signatureBase64);
+  // Convert raw 64-byte public key → SubjectPublicKeyInfo (DER)
+  publicKeyRawToPEM: function (publicKeyBase64) {
     const pubBuf = this.base64ToBuffer(publicKeyBase64);
     if (pubBuf.length !== 64) throw new Error("Invalid public key length");
 
-    // Create PEM for secp256k1 public key
-    const pubHex = Buffer.concat([Buffer.from([0x04]), pubBuf]).toString("base64");
-    const pem = `-----BEGIN PUBLIC KEY-----\n${pubHex}\n-----END PUBLIC KEY-----`;
+    const uncompressed = Buffer.concat([Buffer.from([0x04]), pubBuf]); // prepend 0x04
+
+    const publicKeyDER = Buffer.concat([
+      Buffer.from("3056301006072a8648ce3d020106052b8104000a034200", "hex"),
+      uncompressed,
+    ]);
+
+    return crypto.createPublicKey({
+      key: publicKeyDER,
+      format: "der",
+      type: "spki",
+    });
+  },
+
+  // Convert raw r||s signature (64 bytes) → DER ECDSA signature
+  rawSignatureToDER: function (sigBase64) {
+    const sigBuf = this.base64ToBuffer(sigBase64);
+    if (sigBuf.length !== 64) throw new Error("Invalid raw signature length");
+
+    const r = sigBuf.slice(0, 32);
+    const s = sigBuf.slice(32);
+
+    function trimLeadingZeros(buf) {
+      let i = 0;
+      while (i < buf.length - 1 && buf[i] === 0) i++;
+      return buf.slice(i);
+    }
+
+    function encodeInteger(buf) {
+      buf = trimLeadingZeros(buf);
+      // Add leading zero if high bit is set
+      if (buf[0] & 0x80) buf = Buffer.concat([Buffer.from([0x00]), buf]);
+      return Buffer.concat([Buffer.from([0x02, buf.length]), buf]);
+    }
+
+    const rEncoded = encodeInteger(r);
+    const sEncoded = encodeInteger(s);
+    const seqLen = rEncoded.length + sEncoded.length;
+    return Buffer.concat([Buffer.from([0x30, seqLen]), rEncoded, sEncoded]);
+  },
+
+  sign(message, privateKeyBase64) {
+    const privateKey = this.privateKeyRawToPEM(privateKeyBase64);
+    const sign = crypto.createSign("SHA256");
+    sign.update(message);
+    sign.end();
+    return sign.sign(privateKey).toString("base64");
+  },
+
+  verify(message, signatureBase64, publicKeyBase64) {
+    let signature = this.base64ToBuffer(signatureBase64);
+    // Auto-detect raw signature (64 bytes) and convert to DER
+    if (signature.length === 64) {
+        signature = this.rawSignatureToDER(signatureBase64);
+    }
+
+    const publicKey = this.publicKeyRawToPEM(publicKeyBase64);
     const verify = crypto.createVerify("SHA256");
     verify.update(message);
     verify.end();
-    return verify.verify({ key: pem, format: "pem", type: "spki" }, sigBuf);
+    return verify.verify(publicKey, signature);
   },
 };
