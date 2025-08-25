@@ -8,8 +8,6 @@
 const crypto = require('crypto');
 const ALGO = 'aes-256-gcm';
 const ethers = require('ethers');
-const EC = require('elliptic').ec;
-const ec = new EC('secp256k1');
 
 //ref original https://gist.github.com/rjz/15baffeab434b8125ca4d783f4116d81
 
