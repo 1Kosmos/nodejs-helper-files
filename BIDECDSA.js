@@ -139,31 +139,95 @@ module.exports = {
     return Buffer.from(base64, "base64");
   },
 
-  sign(message, privateKeyBase64) {
+  sign(message, privateKeyBase64, publicKeyBase64) {
     const privBuf = this.base64ToBuffer(privateKeyBase64);
     if (privBuf.length !== 32) throw new Error("Invalid private key length");
-
-    const key = ec.keyFromPrivate(privBuf);
-    const hash = crypto.createHash("sha256").update(message).digest();
-    const signature = key.sign(hash);
-
-    const r = signature.r.toArrayLike(Buffer, "be", 32);
-    const s = signature.s.toArrayLike(Buffer, "be", 32);
-    return Buffer.concat([r, s]).toString("base64");
-  },
-
-  verify(message, signatureBase64, publicKeyBase64) {
-    const sigBuf = this.base64ToBuffer(signatureBase64);
     const pubBuf = this.base64ToBuffer(publicKeyBase64);
     if (pubBuf.length !== 64) throw new Error("Invalid public key length");
 
-    const x = pubBuf.slice(0, 32).toString("hex");
-    const y = pubBuf.slice(32).toString("hex");
-    const key = ec.keyFromPublic({ x, y }, "hex");
+    // Split public key into x and y (each 32 bytes)
+    const x = pubBuf.slice(0, 32);
+    const y = pubBuf.slice(32, 64);
 
-    const hash = crypto.createHash("sha256").update(message).digest();
-    const r = sigBuf.slice(0, 32);
-    const s = sigBuf.slice(32);
-    return key.verify(hash, { r, s });
+    // Build JWK for secp256k1
+    const jwk = {
+      kty: 'EC',
+      crv: 'secp256k1',
+      d: this.toBase64Url(privBuf),
+      x: this.toBase64Url(x),
+      y: this.toBase64Url(y)
+    };
+
+    const privateKeyObj = crypto.createPrivateKey({ key: jwk, format: 'jwk' });
+    const sign = crypto.createSign('SHA256');
+    sign.update(message);
+    sign.end();
+    const derSignature = sign.sign(privateKeyObj);
+
+    // Convert DER to compact (r + s, 64 bytes)
+    function derToCompactSignature(der) {
+      if (der[0] !== 0x30) throw new Error('Invalid DER');
+      let offset = 2;
+      if (der[offset] !== 0x02) throw new Error('Invalid DER');
+      const rLen = der[offset + 1];
+      let r = der.slice(offset + 2, offset + 2 + rLen);
+      offset += 2 + rLen;
+      if (der[offset] !== 0x02) throw new Error('Invalid DER');
+      const sLen = der[offset + 1];
+      let s = der.slice(offset + 2, offset + 2 + sLen);
+      if (r.length < 32) r = Buffer.concat([Buffer.alloc(32 - r.length), r]);
+      if (s.length < 32) s = Buffer.concat([Buffer.alloc(32 - s.length), s]);
+      return Buffer.concat([r, s]);
+    }
+    const compactSignature = derToCompactSignature(derSignature);
+    return compactSignature.toString("base64");
   },
+
+  verify(data, signatureBase64, publicKeyRawBase64) {
+    // Convert base64 raw public key (x+y, 64 bytes) to PEM
+    const keyBuffer = this.base64ToBuffer(publicKeyRawBase64);
+    const asn1Header = Buffer.from([
+      0x30, 0x56,
+      0x30, 0x10,
+      0x06, 0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01,
+      0x06, 0x05, 0x2B, 0x81, 0x04, 0x00, 0x0A,
+      0x03, 0x42, 0x00
+    ]);
+    const uncompressedKey = Buffer.concat([Buffer.from([0x04]), keyBuffer]);
+    const derKey = Buffer.concat([asn1Header, uncompressedKey]);
+    const pemKey = `-----BEGIN PUBLIC KEY-----\n${derKey.toString('base64').match(/.{1,64}/g).join('\n')}\n-----END PUBLIC KEY-----\n`;
+
+    // Convert compact signature to DER
+    let signatureBuf = this.base64ToBuffer(signatureBase64);
+    if (signatureBuf.length === 64) {
+      signatureBuf = this.compactToDerSignature(signatureBuf);
+    }
+
+    const verify = crypto.createVerify('SHA256');
+    verify.update(data);
+    verify.end();
+    return verify.verify(pemKey, signatureBuf);
+  },
+
+  compactToDerSignature(compactSig) {
+    // compactSig: Buffer of 64 bytes (r + s)
+    const r = compactSig.slice(0, 32);
+    const s = compactSig.slice(32, 64);
+
+    function toDER(x) {
+        let i = 0;
+        while (i < x.length && x[i] === 0) ++i;
+        let v = x.slice(i);
+        if (v[0] & 0x80) v = Buffer.concat([Buffer.from([0]), v]);
+        return Buffer.concat([Buffer.from([0x02, v.length]), v]);
+    }
+
+    const der = Buffer.concat([
+        Buffer.from([0x30]),
+        Buffer.from([toDER(r).length + toDER(s).length]),
+        toDER(r),
+        toDER(s)
+    ]);
+    return der;
+}
 };
