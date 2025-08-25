@@ -139,8 +139,8 @@ module.exports = {
 
   sign(message, privateKeyBase64, publicKeyBase64) {
     const privBuf = this.base64ToBuffer(privateKeyBase64);
-    if (privBuf.length !== 32) throw new Error("Invalid private key length");
     const pubBuf = this.base64ToBuffer(publicKeyBase64);
+    if (privBuf.length !== 32) throw new Error("Invalid private key length");
     if (pubBuf.length !== 64) throw new Error("Invalid public key length");
 
     // Split public key into x and y (each 32 bytes)
@@ -162,7 +162,6 @@ module.exports = {
     sign.end();
     const derSignature = sign.sign(privateKeyObj);
 
-    // Convert DER to compact (r + s, 64 bytes)
     function derToCompactSignature(der) {
       if (der[0] !== 0x30) throw new Error('Invalid DER');
       let offset = 2;
@@ -182,8 +181,8 @@ module.exports = {
   },
 
   verify(data, signatureBase64, publicKeyRawBase64) {
-    // Convert base64 raw public key (x+y, 64 bytes) to PEM
     const keyBuffer = this.base64ToBuffer(publicKeyRawBase64);
+    if (keyBuffer.length !== 64) throw new Error("Invalid public key length");
     const asn1Header = Buffer.from([
       0x30, 0x56,
       0x30, 0x10,
@@ -195,7 +194,6 @@ module.exports = {
     const derKey = Buffer.concat([asn1Header, uncompressedKey]);
     const pemKey = `-----BEGIN PUBLIC KEY-----\n${derKey.toString('base64').match(/.{1,64}/g).join('\n')}\n-----END PUBLIC KEY-----\n`;
 
-    // Convert compact signature to DER
     let signatureBuf = this.base64ToBuffer(signatureBase64);
     if (signatureBuf.length === 64) {
       signatureBuf = this.compactToDerSignature(signatureBuf);
@@ -213,19 +211,19 @@ module.exports = {
     const s = compactSig.slice(32, 64);
 
     function toDER(x) {
-        let i = 0;
-        while (i < x.length && x[i] === 0) ++i;
-        let v = x.slice(i);
-        if (v[0] & 0x80) v = Buffer.concat([Buffer.from([0]), v]);
-        return Buffer.concat([Buffer.from([0x02, v.length]), v]);
+      let i = 0;
+      while (i < x.length && x[i] === 0) ++i;
+      let v = x.slice(i);
+      if (v[0] & 0x80) v = Buffer.concat([Buffer.from([0]), v]);
+      return Buffer.concat([Buffer.from([0x02, v.length]), v]);
     }
 
     const der = Buffer.concat([
-        Buffer.from([0x30]),
-        Buffer.from([toDER(r).length + toDER(s).length]),
-        toDER(r),
-        toDER(s)
+      Buffer.from([0x30]),
+      Buffer.from([toDER(r).length + toDER(s).length]),
+      toDER(r),
+      toDER(s)
     ]);
     return der;
-}
+  }
 };
