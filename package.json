@@ -8,7 +8,6 @@
         "ethers": "^6.13.0"
     },
     "devDependencies": {
-        "ethers": "^6.13.0",
         "http-status": "1.4.0",
         "js-sha512": "^0.8.0",
         "moment": "^2.29.3",
