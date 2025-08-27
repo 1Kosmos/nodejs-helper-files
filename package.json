@@ -5,16 +5,14 @@
     "description": "a Sails application",
     "keywords": [],
     "dependencies": {
-        "elliptic": "^6.6.1",
         "ethers": "^6.13.0"
     },
     "devDependencies": {
-        "ethers": "^6.13.0",
         "http-status": "1.4.0",
         "js-sha512": "^0.8.0",
         "moment": "^2.29.3",
         "node-cache": "5.1.2",
-        "node-fetch": "2.6.1",
+        "node-fetch": "^2.7.0",
         "uuid": "8.3.2"
     },
     "repository": {

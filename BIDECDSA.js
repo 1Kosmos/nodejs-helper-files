@@ -8,8 +8,6 @@
 const crypto = require('crypto');
 const ALGO = 'aes-256-gcm';
 const ethers = require('ethers');
-const EC = require('elliptic').ec;
-const ec = new EC('secp256k1');
 
 //ref original https://gist.github.com/rjz/15baffeab434b8125ca4d783f4116d81
 
@@ -125,45 +123,5 @@ module.exports = {
       privateKey: privateKeyBase64,
       mnemonic: mnemonic.phrase
     };
-  },
-
-  toBase64Url: function (buf) {
-    return buf
-      .toString("base64")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
-  },
-
-  base64ToBuffer(base64) {
-    return Buffer.from(base64, "base64");
-  },
-
-  sign(message, privateKeyBase64) {
-    const privBuf = this.base64ToBuffer(privateKeyBase64);
-    if (privBuf.length !== 32) throw new Error("Invalid private key length");
-
-    const key = ec.keyFromPrivate(privBuf);
-    const hash = crypto.createHash("sha256").update(message).digest();
-    const signature = key.sign(hash);
-
-    const r = signature.r.toArrayLike(Buffer, "be", 32);
-    const s = signature.s.toArrayLike(Buffer, "be", 32);
-    return Buffer.concat([r, s]).toString("base64");
-  },
-
-  verify(message, signatureBase64, publicKeyBase64) {
-    const sigBuf = this.base64ToBuffer(signatureBase64);
-    const pubBuf = this.base64ToBuffer(publicKeyBase64);
-    if (pubBuf.length !== 64) throw new Error("Invalid public key length");
-
-    const x = pubBuf.slice(0, 32).toString("hex");
-    const y = pubBuf.slice(32).toString("hex");
-    const key = ec.keyFromPublic({ x, y }, "hex");
-
-    const hash = crypto.createHash("sha256").update(message).digest();
-    const r = sigBuf.slice(0, 32);
-    const s = sigBuf.slice(32);
-    return key.verify(hash, { r, s });
-  },
+  }
 };
