@@ -123,5 +123,5 @@ module.exports = {
       privateKey: privateKeyBase64,
       mnemonic: mnemonic.phrase
     };
-  },
+  }
 };
