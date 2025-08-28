@@ -11,6 +11,7 @@ const { v4: uuidv4 } = require('uuid');
 const BIDECDSA = require('./BIDECDSA');
 const BIDTenant = require('./BIDTenant');
 const fetch = require('node-fetch');
+const Helper = require('./helper');
 
 const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull) => {
   try {
@@ -70,7 +71,7 @@ const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsI
   }
 }
 
-const verifyOTP = async (tenantInfo, userName, otpCode) => {
+const verifyOTP = async (tenantInfo, userName, otpCode, requestId) => {
   try {
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
     const keySet = BIDTenant.getKeySet();
@@ -86,11 +87,8 @@ const verifyOTP = async (tenantInfo, userName, otpCode) => {
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, communityInfo.community.publicKey);
 
-    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify({
-      ts: Math.round(new Date().getTime() / 1000),
-      appid: 'fixme',
-      uuid: uuidv4()
-    }), sharedKey);
+    const requestID = Helper.createRequestID(requestId);
+    const encryptedRequestId = BIDECDSA.encrypt(JSON.stringify(requestID), sharedKey);
 
     let headers = {
       'Content-Type': 'application/json',
