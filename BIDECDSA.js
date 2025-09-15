@@ -30,6 +30,8 @@ module.exports = {
       ecCurveName = envData.EC_CURVE_NAME;
       return ecCurveName;
     }
+
+    console.debug('[ALERT] EC_CURVE_NAME not configured, defaulting to secp256k1');
     ecCurveName = 'secp256k1';
     return ecCurveName;
   },
