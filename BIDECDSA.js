@@ -15,7 +15,7 @@ let ecCurveName = null;
 //ref original https://gist.github.com/rjz/15baffeab434b8125ca4d783f4116d81
 
 module.exports = {
-  getECCurveName: async function getECCurveName() {
+  initECCurveName: async function () {
     if (ecCurveName) {
       return ecCurveName;
     }
