@@ -88,10 +88,10 @@ module.exports = {
     return str;
   },
 
-  createSharedKey: function (prKey, pKey64) {
+  createSharedKey: async function (prKey, pKey64) {
     try {
       if(!ecCurveName) {
-        this.getECCurveName();
+        await this.getECCurveName();
       }
       const set1 = crypto.createECDH(ecCurveName);
       set1.setPrivateKey(Buffer.from(prKey, 'base64'))
@@ -112,9 +112,9 @@ module.exports = {
     }
   },
 
-  generateKeyPair: function () {
+  generateKeyPair: async function () {
     if (!ecCurveName) {
-      this.getECCurveName();
+      await this.getECCurveName();
     }
     const set1 = crypto.createECDH(ecCurveName);
     set1.generateKeys()
