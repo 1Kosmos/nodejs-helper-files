@@ -2,6 +2,7 @@
 const WTM = require('./WTM');
 
 const getEnvironment = async () => {
+    if(!process.env.CAAS_API) return {};
     const url = `${process.env.CAAS_API}/environment`;
     const response = await WTM.executeRequest({
         method: 'get',
