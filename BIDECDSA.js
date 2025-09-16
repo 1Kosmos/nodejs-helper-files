@@ -16,7 +16,6 @@ let ecCurveName = null;
 
 module.exports = {
   getECCurveName: async function getECCurveName() {
-    ecCurveName = "prime256v1";
     if (ecCurveName) {
       return ecCurveName;
     }
