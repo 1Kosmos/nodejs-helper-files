@@ -32,6 +32,9 @@ module.exports = {
     return ecCurveName;
   },
 
+  getECCurveName: async function () {
+    return await this.initECCurveName();
+  },
   ecdsaHelper: function (method, str, key) {
     if (method === "encrypt") {
       return this.encrypt(str, key)
