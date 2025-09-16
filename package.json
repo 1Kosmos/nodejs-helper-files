@@ -4,9 +4,6 @@
     "version": "0.0.0",
     "description": "a Sails application",
     "keywords": [],
-    "dependencies": {
-        "ethers": "^6.13.0"
-    },
     "devDependencies": {
         "http-status": "1.4.0",
         "js-sha512": "^0.8.0",
