@@ -35,6 +35,7 @@ module.exports = {
     ecCurveName = 'secp256k1';
     return ecCurveName;
   },
+
   ecdsaHelper: function (method, str, key) {
     if (method === "encrypt") {
       return this.encrypt(str, key)
@@ -89,6 +90,9 @@ module.exports = {
 
   createSharedKey: function (prKey, pKey64) {
     try {
+      if(!ecCurveName) {
+        this.getECCurveName();
+      }
       const set1 = crypto.createECDH(ecCurveName);
       set1.setPrivateKey(Buffer.from(prKey, 'base64'))
       /* convert other party's public key to encryption public key : ref php code */
