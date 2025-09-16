@@ -7,11 +7,31 @@
  */
 const crypto = require('crypto');
 const ALGO = 'aes-256-gcm';
-const ethers = require('ethers');
+const { v4: uuidv4 } = require('uuid');
+
+const BIDCaas = require('./BIDCaas');
+let ecCurveName = null;
 
 //ref original https://gist.github.com/rjz/15baffeab434b8125ca4d783f4116d81
 
 module.exports = {
+  initECCurveName: async function () {
+    if (ecCurveName) {
+      return ecCurveName;
+    }
+
+    ecCurveName = process.env.EC_CURVE_NAME;
+    if (!ecCurveName) {
+      ecCurveName = await BIDCaas.getEnvironment().EC_CURVE_NAME;
+    }
+
+    if (!ecCurveName) {
+      console.debug('[ALERT] EC_CURVE_NAME not configured, defaulting to secp256k1');
+      ecCurveName = 'secp256k1';
+    }
+    return ecCurveName;
+  },
+
   ecdsaHelper: function (method, str, key) {
     if (method === "encrypt") {
       return this.encrypt(str, key)
@@ -66,7 +86,7 @@ module.exports = {
 
   createSharedKey: function (prKey, pKey64) {
     try {
-      const set1 = crypto.createECDH('secp256k1');
+      const set1 = crypto.createECDH(ecCurveName);
       set1.setPrivateKey(Buffer.from(prKey, 'base64'))
       /* convert other party's public key to encryption public key : ref php code */
       var ret = ""
@@ -86,7 +106,7 @@ module.exports = {
   },
 
   generateKeyPair: function () {
-    const set1 = crypto.createECDH('secp256k1');
+    const set1 = crypto.createECDH(ecCurveName);
     set1.generateKeys()
 
     let prKey = set1.getPrivateKey().toString('base64')
@@ -96,32 +116,12 @@ module.exports = {
   },
 
   createWallet: function () {
-    const wallet = ethers.Wallet.createRandom();
-
-    const { address, mnemonic } = wallet;
-    const { privateKey } = wallet.signingKey;
-
-    // Compute **uncompressed** public key (65 bytes, 0x04 prefix)
-    const uncompressedPublicKey = ethers.SigningKey.computePublicKey(privateKey, false);
-
-    const privateKeyBytes = ethers.getBytes(privateKey);
-    let publicKeyBytes = ethers.getBytes(uncompressedPublicKey);
-
-    // Drop the 0x04 prefix if needed (like in your v5 logic)
-    if (publicKeyBytes.length > 64) {
-      publicKeyBytes = publicKeyBytes.slice(1);
-    }
-
-    const privateKeyBase64 = ethers.encodeBase64(privateKeyBytes);
-    const publicKeyBase64 = ethers.encodeBase64(publicKeyBytes);
-
-    const did = address.startsWith("0x") ? address.slice(2).toLowerCase() : address.toLowerCase();
+    const [privateKeyBase64, publicKeyBase64] = this.generateKeyPair();
 
     return {
-      did,
+      did: uuidv4(),
       publicKey: publicKeyBase64,
-      privateKey: privateKeyBase64,
-      mnemonic: mnemonic.phrase
+      privateKey: privateKeyBase64
     };
   }
 };
