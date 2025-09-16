@@ -8,7 +8,7 @@ const getEnvironment = async () => {
         url,
         keepAlive: true,
     });
-    const ret = response && response.json ? response.json : null;
+    let ret = response && response.json ? response.json : null;
     if (!ret) {
         ret = {};
     }
