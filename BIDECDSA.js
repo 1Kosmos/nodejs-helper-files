@@ -113,6 +113,9 @@ module.exports = {
   },
 
   generateKeyPair: function () {
+    if (!ecCurveName) {
+      this.getECCurveName();
+    }
     const set1 = crypto.createECDH(ecCurveName);
     set1.generateKeys()
 
