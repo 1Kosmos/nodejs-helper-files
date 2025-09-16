@@ -7,7 +7,7 @@
  */
 const crypto = require('crypto');
 const ALGO = 'aes-256-gcm';
-const ethers = require('ethers');
+const { v4: uuidv4 } = require('uuid');
 
 const BIDCaas = require('./BIDCaas');
 let ecCurveName = null;
@@ -119,32 +119,12 @@ module.exports = {
   },
 
   createWallet: function () {
-    const wallet = ethers.Wallet.createRandom();
-
-    const { address, mnemonic } = wallet;
-    const { privateKey } = wallet.signingKey;
-
-    // Compute **uncompressed** public key (65 bytes, 0x04 prefix)
-    const uncompressedPublicKey = ethers.SigningKey.computePublicKey(privateKey, false);
-
-    const privateKeyBytes = ethers.getBytes(privateKey);
-    let publicKeyBytes = ethers.getBytes(uncompressedPublicKey);
-
-    // Drop the 0x04 prefix if needed (like in your v5 logic)
-    if (publicKeyBytes.length > 64) {
-      publicKeyBytes = publicKeyBytes.slice(1);
-    }
-
-    const privateKeyBase64 = ethers.encodeBase64(privateKeyBytes);
-    const publicKeyBase64 = ethers.encodeBase64(publicKeyBytes);
-
-    const did = address.startsWith("0x") ? address.slice(2).toLowerCase() : address.toLowerCase();
+    const [privateKeyBase64, publicKeyBase64] = this.generateKeyPair();
 
     return {
-      did,
+      did: uuidv4(),
       publicKey: publicKeyBase64,
-      privateKey: privateKeyBase64,
-      mnemonic: mnemonic.phrase
+      privateKey: privateKeyBase64
     };
   }
 };
