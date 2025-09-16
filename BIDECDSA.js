@@ -20,14 +20,14 @@ module.exports = {
     if (ecCurveName) {
       return ecCurveName;
     }
-    if (process.env.EC_CURVE_NAME) {
-      ecCurveName = process.env.EC_CURVE_NAME;
-      return ecCurveName;
-    }
 
     const envData = await BIDCaas.getEnvironment();
     if (envData.EC_CURVE_NAME) {
       ecCurveName = envData.EC_CURVE_NAME;
+      return ecCurveName;
+    }
+    if (process.env.EC_CURVE_NAME) {
+      ecCurveName = process.env.EC_CURVE_NAME;
       return ecCurveName;
     }
 
