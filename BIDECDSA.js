@@ -88,11 +88,8 @@ module.exports = {
     return str;
   },
 
-  createSharedKey: async function (prKey, pKey64) {
+  createSharedKey: function (prKey, pKey64) {
     try {
-      if(!ecCurveName) {
-        await this.getECCurveName();
-      }
       const set1 = crypto.createECDH(ecCurveName);
       set1.setPrivateKey(Buffer.from(prKey, 'base64'))
       /* convert other party's public key to encryption public key : ref php code */
@@ -112,10 +109,7 @@ module.exports = {
     }
   },
 
-  generateKeyPair: async function () {
-    if (!ecCurveName) {
-      await this.getECCurveName();
-    }
+  generateKeyPair: function () {
     const set1 = crypto.createECDH(ecCurveName);
     set1.generateKeys()
 
