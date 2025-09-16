@@ -20,18 +20,15 @@ module.exports = {
       return ecCurveName;
     }
 
-    const envData = await BIDCaas.getEnvironment();
-    if (envData.EC_CURVE_NAME) {
-      ecCurveName = envData.EC_CURVE_NAME;
-      return ecCurveName;
-    }
-    if (process.env.EC_CURVE_NAME) {
-      ecCurveName = process.env.EC_CURVE_NAME;
-      return ecCurveName;
+    ecCurveName = process.env.EC_CURVE_NAME;
+    if (!ecCurveName) {
+      ecCurveName = await BIDCaas.getEnvironment().EC_CURVE_NAME;
     }
 
-    console.debug('[ALERT] EC_CURVE_NAME not configured, defaulting to secp256k1');
-    ecCurveName = 'secp256k1';
+    if (!ecCurveName) {
+      console.debug('[ALERT] EC_CURVE_NAME not configured, defaulting to secp256k1');
+      ecCurveName = 'secp256k1';
+    }
     return ecCurveName;
   },
 
