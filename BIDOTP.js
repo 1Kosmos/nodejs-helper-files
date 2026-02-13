@@ -13,7 +13,7 @@ const BIDTenant = require('./BIDTenant');
 const fetch = require('node-fetch');
 const Helper = require('./helper');
 
-const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull) => {
+const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull, serviceName = null) => {
   try {
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
     const keySet = BIDTenant.getKeySet();
@@ -33,6 +33,10 @@ const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsI
     if (smsISDCodeOrNull !== null && smsToOrNull != null) {
       req.smsTo = smsToOrNull;
       req.smsISDCode = smsISDCodeOrNull;
+    }
+
+    if (serviceName) {
+      req.serviceName = serviceName;
     }
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, communityInfo.community.publicKey);
@@ -71,7 +75,7 @@ const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsI
   }
 }
 
-const verifyOTP = async (tenantInfo, userName, otpCode, requestId) => {
+const verifyOTP = async (tenantInfo, userName, otpCode, requestId, serviceName = null) => {
   try {
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
     const keySet = BIDTenant.getKeySet();
@@ -83,6 +87,10 @@ const verifyOTP = async (tenantInfo, userName, otpCode, requestId) => {
       code: otpCode,
       communityId: communityInfo.community.id,
       tenantId: communityInfo.tenant.id
+    }
+
+    if (serviceName) {
+      req.serviceName = serviceName;
     }
 
     let sharedKey = BIDECDSA.createSharedKey(keySet.prKey, communityInfo.community.publicKey);
