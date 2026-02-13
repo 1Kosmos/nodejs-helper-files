@@ -13,7 +13,7 @@ const BIDTenant = require('./BIDTenant');
 const fetch = require('node-fetch');
 const Helper = require('./helper');
 
-const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull, serviceName) => {
+const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsISDCodeOrNull, serviceName = null) => {
   try {
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
     const keySet = BIDTenant.getKeySet();
@@ -75,7 +75,7 @@ const requestOTP = async (tenantInfo, userName, emailToOrNull, smsToOrNull, smsI
   }
 }
 
-const verifyOTP = async (tenantInfo, userName, otpCode, requestId, serviceName) => {
+const verifyOTP = async (tenantInfo, userName, otpCode, requestId, serviceName = null) => {
   try {
     const communityInfo = await BIDTenant.getCommunityInfo(tenantInfo);
     const keySet = BIDTenant.getKeySet();
