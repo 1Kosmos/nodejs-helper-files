@@ -6,7 +6,7 @@
  *    https://github.com/1Kosmos/1Kosmos_License/blob/main/LICENSE.txt
  */
 'use strict';
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID: uuidv4 } = require('crypto');
 const moment = require('moment');
 const sha512 = require('js-sha512');
 

@@ -11,7 +11,7 @@ const BIDTenant = require('./BIDTenant');
 const BIDUsers = require('./BIDUsers');
 const BIDEvents = require('./BIDEvents');
 const WTM = require('./WTM');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID: uuidv4 } = require('crypto');
 
 const getPublicKey = async (baseUrl) => {
   const pubicKeyUrl = `${baseUrl}/publickeys`;
