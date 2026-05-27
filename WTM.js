@@ -10,7 +10,7 @@ const fetch = require('node-fetch');
 const NodeCache = require('node-cache');
 const httpStatus = require('http-status');
 const keepAliveAgent = require('./KeepAliveAgent');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID: uuidv4 } = require('crypto');
 const cache = new NodeCache();
 
 const hostMappingString = Buffer.from(process.env.HOST_MAPPING || '', 'base64').toString('utf-8');

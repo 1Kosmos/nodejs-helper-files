@@ -6,8 +6,8 @@
  *    https://github.com/1Kosmos/1Kosmos_License/blob/main/LICENSE.txt
  */
 const crypto = require('crypto');
+const { randomUUID: uuidv4 } = crypto;
 const ALGO = 'aes-256-gcm';
-const { v4: uuidv4 } = require('uuid');
 
 const BIDCaas = require('./BIDCaas');
 let ecCurveName = null;
