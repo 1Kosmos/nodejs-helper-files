@@ -21,9 +21,15 @@ NodeCache.prototype.init = function (...args) {
   return _originalInit.apply(this, args);
 };
 
+// Resolve WTM once at module load (avoids repeated require lookup on every flush)
+let WTM = null;
+try {
+  WTM = require('./WTM');
+} catch (e) { /* WTM not available — skip */ }
+
 /**
  * Flushes ALL NodeCache instances in the process + WTM HTTP response cache.
- * @returns {{ nodeCaches: number, wtmKeys: number }}
+ * @returns {{ nodeCaches: number, totalKeys: number, wtmKeys: number }}
  */
 const flushAll = () => {
   let totalKeys = 0;
@@ -31,16 +37,15 @@ const flushAll = () => {
     try {
       totalKeys += c.keys().length;
       c.flushAll();
-    } catch (e) { /* ignore */ }
+    } catch (e) { /* ignore dead cache reference */ }
   });
 
   let wtmKeys = 0;
-  try {
-    const WTM = require('./WTM');
-    if (typeof WTM.flushCache === 'function') {
+  if (WTM && typeof WTM.flushCache === 'function') {
+    try {
       wtmKeys = WTM.flushCache();
-    }
-  } catch (e) { /* ignore */ }
+    } catch (e) { /* ignore */ }
+  }
 
   return { nodeCaches: allCaches.length, totalKeys, wtmKeys };
 };

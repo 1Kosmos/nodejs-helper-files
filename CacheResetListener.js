@@ -3,19 +3,18 @@
 /**
  * CacheResetListener — Kafka-based distributed cache flush for all 1Kosmos microservices.
  *
- * Usage (one line in each service's index.js after Kafka config is fetched):
+ * Usage:
  *   const CacheResetListener = require('blockid-nodejs-helpers/CacheResetListener');
- *   CacheResetListener.initialize({ kafkaConfig, serviceName, logger, onFlush });
+ *   CacheResetListener.initialize({ kafkaConfig, serviceName, logger });
  *
  * Options:
  *   - kafkaConfig: { brokers: string[], kafka_off?: boolean }
  *   - serviceName: e.g. 'adminapi', 'caas', 'users-mgmt' (used for groupId + target matching)
  *   - logger: Winston logger instance (must have .info, .warn, .error)
- *   - onFlush: optional callback invoked after WTM cache is flushed (for service-specific caches)
+ *   - onFlush: optional callback invoked after caches are flushed (for service-specific cleanup)
  *   - verifySignature: optional async function(payload) => boolean for ECDSA verification
  */
 
-const WTM = require('./WTM');
 const CacheRegistry = require('./CacheRegistry');
 
 const TOPIC_NAME = 'platform_cache_reset';
@@ -68,7 +67,9 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush, verifySig
     await consumer.subscribe({ topic: TOPIC_NAME, fromBeginning: false });
 
     consumer.on(consumer.events.CRASH, (event) => {
-      if (!event.payload.restart) logger.error('[CacheResetListener] Connection to KafkaJS is lost, please restart this service');
+      if (!event.payload.restart) {
+        logger.error('[CacheResetListener] Consumer crashed and will not restart — cache flush disabled until service restart');
+      }
     });
 
     await consumer.run({
@@ -85,20 +86,18 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush, verifySig
               logger.warn('[CacheResetListener] Rejecting unverified message');
               return;
             }
-          } else {
-            // Fallback: basic source check
-            if (payload.source !== 'caas') {
-              logger.warn(`[CacheResetListener] Ignoring message from untrusted source: ${payload.source}`);
-              return;
-            }
+          } else if (payload.source !== 'caas') {
+            logger.warn(`[CacheResetListener] Ignoring message from untrusted source: ${payload.source}`);
+            return;
           }
 
-          // Replay protection (if signature has timestamp)
+          // Replay protection
           if (payload.timestamp && Math.abs(Date.now() - payload.timestamp) > REPLAY_WINDOW_MS) {
             logger.warn(`[CacheResetListener] Rejecting stale message (age: ${Date.now() - payload.timestamp}ms)`);
             return;
           }
 
+          // Target filtering
           if (payload.targets && !Array.isArray(payload.targets)) {
             logger.warn('[CacheResetListener] Ignoring message with invalid targets');
             return;
@@ -112,16 +111,16 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush, verifySig
             return;
           }
 
-          // Flush all caches (WTM + all NodeCache instances)
+          // Flush all caches (NodeCache instances + WTM)
           const result = CacheRegistry.flushAll();
           logger.info(`[CacheResetListener] Cache flush complete: ${result.nodeCaches} caches, ${result.totalKeys} keys cleared, WTM: ${result.wtmKeys} keys`);
 
-          // Call service-specific flush callback if provided
+          // Service-specific flush callback
           if (onFlush && typeof onFlush === 'function') {
             onFlush();
           }
         } catch (error) {
-          logger.error(`[CacheResetListener] Error processing message: ${error}`);
+          logger.error(`[CacheResetListener] Error processing message: ${error.message}`);
         }
       },
     });
@@ -129,6 +128,11 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush, verifySig
     initialized = true;
     logger.info(`[CacheResetListener] Listening on topic ${TOPIC_NAME} (groupId: ${groupId})`);
   } catch (error) {
+    // Clean up dangling consumer on partial failure
+    if (consumer) {
+      try { await consumer.disconnect(); } catch (e) { /* ignore */ }
+      consumer = null;
+    }
     logger.error(`[CacheResetListener] Initialization failed: ${error.message}`);
   }
 };
