@@ -16,6 +16,7 @@
  */
 
 const WTM = require('./WTM');
+const CacheRegistry = require('./CacheRegistry');
 
 const TOPIC_NAME = 'platform_cache_reset';
 const REPLAY_WINDOW_MS = 30000;
@@ -111,16 +112,14 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush, verifySig
             return;
           }
 
-          // Flush WTM cache
-          const wtmKeys = WTM.flushCache();
-          logger.info(`[CacheResetListener] WTM cache flushed (${wtmKeys} keys cleared)`);
+          // Flush all caches (WTM + all NodeCache instances)
+          const result = CacheRegistry.flushAll();
+          logger.info(`[CacheResetListener] Cache flush complete: ${result.nodeCaches} caches, ${result.totalKeys} keys cleared, WTM: ${result.wtmKeys} keys`);
 
-          // Call service-specific flush callback
+          // Call service-specific flush callback if provided
           if (onFlush && typeof onFlush === 'function') {
             onFlush();
           }
-
-          logger.info(`[CacheResetListener] Cache flush complete for ${serviceName}`);
         } catch (error) {
           logger.error(`[CacheResetListener] Error processing message: ${error}`);
         }
