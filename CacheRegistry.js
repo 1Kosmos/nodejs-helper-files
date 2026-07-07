@@ -10,16 +10,25 @@
  * When flushAll() is called, every NodeCache instance + WTM cache is cleared.
  */
 
-const NodeCache = require('node-cache');
+const OriginalNodeCache = require('node-cache');
 
 const allCaches = [];
 
-// Patch NodeCache constructor to auto-register every instance
-const _originalInit = NodeCache.prototype.init;
-NodeCache.prototype.init = function (...args) {
-  allCaches.push(this);
-  return _originalInit.apply(this, args);
-};
+// Replace node-cache module export with a wrapper that captures every instance.
+// node-cache v5.x does NOT have a `.init()` prototype method, so patching the
+// constructor via the require cache is the only reliable interception point.
+function PatchedNodeCache(...args) {
+  const instance = new OriginalNodeCache(...args);
+  allCaches.push(instance);
+  return instance;
+}
+
+// Preserve prototype chain so instanceof checks still work
+PatchedNodeCache.prototype = OriginalNodeCache.prototype;
+PatchedNodeCache.prototype.constructor = PatchedNodeCache;
+
+// Replace in Node's require cache so all subsequent `require('node-cache')` get the patched version
+require.cache[require.resolve('node-cache')].exports = PatchedNodeCache;
 
 // Resolve WTM once at module load (avoids repeated require lookup on every flush)
 let WTM = null;
