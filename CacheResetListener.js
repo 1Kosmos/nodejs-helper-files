@@ -12,7 +12,6 @@
  *   - serviceName: e.g. 'adminapi', 'caas', 'users-mgmt' (used for groupId + target matching)
  *   - logger: Winston logger instance (must have .info, .warn, .error)
  *   - onFlush: optional callback invoked after caches are flushed (for service-specific cleanup)
- *   - verifySignature: optional async function(payload) => boolean for ECDSA verification
  */
 
 const CacheRegistry = require('./CacheRegistry');
@@ -23,7 +22,7 @@ const REPLAY_WINDOW_MS = 30000;
 let consumer = null;
 let initialized = false;
 
-const initialize = async ({ kafkaConfig, serviceName, logger, onFlush, verifySignature }) => {
+const initialize = async ({ kafkaConfig, serviceName, logger, onFlush }) => {
   if (initialized) {
     logger.info('[CacheResetListener] Already initialized, skipping');
     return;
@@ -79,14 +78,8 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush, verifySig
 
           const payload = JSON.parse(message.value.toString());
 
-          // Signature verification (if provided)
-          if (verifySignature) {
-            const isValid = await verifySignature(payload);
-            if (!isValid) {
-              logger.warn('[CacheResetListener] Rejecting unverified message');
-              return;
-            }
-          } else if (payload.source !== 'caas') {
+          // Source validation
+          if (payload.source !== 'caas') {
             logger.warn(`[CacheResetListener] Ignoring message from untrusted source: ${payload.source}`);
             return;
           }
