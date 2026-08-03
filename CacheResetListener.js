@@ -9,7 +9,7 @@
  *
  * Options:
  *   - kafkaConfig: { brokers: string[], kafka_off?: boolean }
- *   - serviceName: e.g. 'adminapi', 'caas', 'users-mgmt' (used for groupId + target matching)
+ *   - serviceName: e.g. 'adminapi', 'caas', 'users-mgmt' (used for groupId)
  *   - logger: Winston logger instance (must have .info, .warn, .error)
  *   - onFlush: optional callback invoked after caches are flushed (for service-specific cleanup)
  */
@@ -87,20 +87,6 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush }) => {
           // Replay protection
           if (payload.timestamp && Math.abs(Date.now() - payload.timestamp) > REPLAY_WINDOW_MS) {
             logger.warn(`[CacheResetListener] Rejecting stale message (age: ${Date.now() - payload.timestamp}ms)`);
-            return;
-          }
-
-          // Target filtering
-          if (payload.targets && !Array.isArray(payload.targets)) {
-            logger.warn('[CacheResetListener] Ignoring message with invalid targets');
-            return;
-          }
-
-          const targets = payload.targets;
-          const shouldFlush = !targets || targets.length === 0 || targets.includes(serviceName);
-
-          if (!shouldFlush) {
-            logger.info(`[CacheResetListener] Not targeted (targets: ${JSON.stringify(targets)}), skipping`);
             return;
           }
 
