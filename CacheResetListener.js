@@ -17,7 +17,7 @@
 const CacheRegistry = require('./CacheRegistry');
 
 const TOPIC_NAME = 'platform_cache_reset';
-const REPLAY_WINDOW_MS = 30000; // reject messages more than 30 seconds old or in the future
+const REPLAY_WINDOW_MS = 30000; // allow up to 30s clock skew in either direction
 
 let initialized = false;
 
@@ -81,7 +81,7 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
           }
 
           // Reject old/replayed messages (or missing timestamp)
-          if (!payload.timestamp || typeof payload.timestamp !== 'number' || Math.abs(Date.now() - payload.timestamp) > REPLAY_WINDOW_MS) {
+          if (!Number.isFinite(payload.timestamp) || Math.abs(Date.now() - payload.timestamp) > REPLAY_WINDOW_MS) {
             logger.warn(`[CacheResetListener] Rejecting message — invalid or stale timestamp`);
             return;
           }
