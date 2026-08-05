@@ -52,7 +52,7 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
   let consumer = null;
   try {
     // Each pod gets a unique group so every pod receives every message (fan-out)
-    const podId = process.env.HOSTNAME || require('crypto').randomUUID();
+    const podId = process.env.HOSTNAME || require('crypto').randomBytes(8).toString('hex');
     const groupId = `${TOPIC_NAME}-${serviceName}-${podId}`;
 
     const kafka = new Kafka({ clientId: `${TOPIC_NAME}-${serviceName}-${podId}`, brokers });
