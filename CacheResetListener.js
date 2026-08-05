@@ -14,7 +14,6 @@
  *   await CacheResetListener.initialize({ kafkaConfig, serviceName, logger });
  */
 
-const { Kafka } = require('kafkajs');
 const CacheRegistry = require('./CacheRegistry');
 
 const TOPIC_NAME = 'platform_cache_reset';
@@ -44,6 +43,7 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
     const podId = process.env.HOSTNAME || require('crypto').randomUUID();
     const groupId = `${TOPIC_NAME}-${serviceName}-${podId}`;
 
+    const { Kafka } = require('kafkajs');
     const kafka = new Kafka({ clientId: `${TOPIC_NAME}-${serviceName}-${podId}`, brokers });
     consumer = kafka.consumer({ groupId });
 
