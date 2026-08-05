@@ -161,14 +161,7 @@ const executeRequest = async (object) => {
 };
 
 
-const flushCache = () => {
-    const keys = cache.keys();
-    cache.flushAll();
-    return keys.length;
-};
-
 module.exports = {
     executeRequest,
-    createRequestID,
-    flushCache
+    createRequestID
 };
