@@ -49,13 +49,14 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
     return;
   }
 
+  let consumer = null;
   try {
     // Each pod gets a unique group so every pod receives every message (fan-out)
     const podId = process.env.HOSTNAME || require('crypto').randomUUID();
     const groupId = `${TOPIC_NAME}-${serviceName}-${podId}`;
 
-    const kafka = new Kafka({ clientId: `client-${TOPIC_NAME}`, brokers });
-    const consumer = kafka.consumer({ groupId });
+    const kafka = new Kafka({ clientId: `${TOPIC_NAME}-${serviceName}-${podId}`, brokers });
+    consumer = kafka.consumer({ groupId });
 
     await consumer.connect();
     await consumer.subscribe({ topic: TOPIC_NAME, fromBeginning: false });
@@ -97,6 +98,10 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
     initialized = true;
     logger.info(`[CacheResetListener] Listening on topic ${TOPIC_NAME} (groupId: ${groupId})`);
   } catch (error) {
+    // Clean up consumer on partial initialization failure
+    if (consumer) {
+      try { await consumer.disconnect(); } catch (e) { /* best effort */ }
+    }
     logger.error(`[CacheResetListener] Initialization failed: ${error.message}`);
   }
 };

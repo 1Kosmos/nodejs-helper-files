@@ -31,7 +31,10 @@ TrackedNodeCache.prototype = RealNodeCache.prototype;
 
 // Step 4: Replace node-cache in Node's require system
 // After this, any file that does require('node-cache') gets TrackedNodeCache
-require.cache[require.resolve('node-cache')].exports = TrackedNodeCache;
+const nodeCacheEntry = require.cache[require.resolve('node-cache')];
+if (nodeCacheEntry) {
+  nodeCacheEntry.exports = TrackedNodeCache;
+}
 
 /**
  * Clears ALL cached data across the entire service.
