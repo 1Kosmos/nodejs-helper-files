@@ -45,7 +45,7 @@ const flushAll = () => {
     try {
       totalKeys += cache.keys().length;
       cache.flushAll();
-    } catch (e) { /* skip if cache was garbage collected */ }
+    } catch (e) { /* skip — cache instance may be in a bad state */ }
   });
 
   return { nodeCaches: allCaches.length, totalKeys };

@@ -79,9 +79,9 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
             return;
           }
 
-          // Reject old/replayed messages
-          if (payload.timestamp && Math.abs(Date.now() - payload.timestamp) > REPLAY_WINDOW_MS) {
-            logger.warn(`[CacheResetListener] Rejecting stale message (age: ${Date.now() - payload.timestamp}ms)`);
+          // Reject old/replayed messages (or missing timestamp)
+          if (!payload.timestamp || typeof payload.timestamp !== 'number' || Math.abs(Date.now() - payload.timestamp) > REPLAY_WINDOW_MS) {
+            logger.warn(`[CacheResetListener] Rejecting message — invalid or stale timestamp`);
             return;
           }
 
