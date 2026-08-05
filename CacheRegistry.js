@@ -13,45 +13,31 @@
  *     require('blockid-nodejs-helpers/CacheRegistry');
  *
  *   That's it. All caches created after this line are automatically tracked.
- *   Safe no-op if node-cache is not installed.
  */
 
+const RealNodeCache = require('node-cache');
 const allCaches = [];
 
-// Patch node-cache if available — safe no-op if not installed
-try {
-  const RealNodeCache = require('node-cache');
-
-  function TrackedNodeCache(...args) {
-    const instance = new RealNodeCache(...args);
-    allCaches.push(instance);
-    return instance;
-  }
-  TrackedNodeCache.prototype = RealNodeCache.prototype;
-
-  const nodeCacheEntry = require.cache[require.resolve('node-cache')];
-  if (nodeCacheEntry) {
-    nodeCacheEntry.exports = TrackedNodeCache;
-  }
-} catch (e) {
-  if (e.code !== 'MODULE_NOT_FOUND') throw e;
-  // node-cache not installed — flushAll() will be a no-op
+function TrackedNodeCache(...args) {
+  const instance = new RealNodeCache(...args);
+  allCaches.push(instance);
+  return instance;
 }
+TrackedNodeCache.prototype = RealNodeCache.prototype;
+
+require.cache[require.resolve('node-cache')].exports = TrackedNodeCache;
 
 /**
  * Clears ALL cached data across the entire service.
- * Called by CacheResetListener when a flush signal is received from Kafka.
  */
 const flushAll = () => {
   let totalKeys = 0;
-
   allCaches.forEach((cache) => {
     try {
-      totalKeys += (typeof cache.getStats === 'function' ? cache.getStats().keys : cache.keys().length) ?? 0;
+      totalKeys += cache.keys().length;
       cache.flushAll();
-    } catch (e) { /* skip — cache instance may be in a bad state */ }
+    } catch (e) { /* skip */ }
   });
-
   return { nodeCaches: allCaches.length, totalKeys };
 };
 

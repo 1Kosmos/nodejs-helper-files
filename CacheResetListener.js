@@ -9,26 +9,25 @@
  *   3. When a message arrives from CaaS, calls CacheRegistry.flushAll()
  *   4. All in-memory caches are cleared — next request fetches fresh data
  *
- * USAGE (in each service's CacheResetConsumer.js):
+ * USAGE:
  *   const CacheResetListener = require('blockid-nodejs-helpers/CacheResetListener');
  *   await CacheResetListener.initialize({ kafkaConfig, serviceName, logger });
  */
 
+const { Kafka } = require('kafkajs');
 const CacheRegistry = require('./CacheRegistry');
 
 const TOPIC_NAME = 'platform_cache_reset';
-const REPLAY_WINDOW_MS = 30000; // allow up to 30s clock skew in either direction
+const REPLAY_WINDOW_MS = 30000;
 
 let initialized = false;
 
 const initialize = async ({ kafkaConfig, serviceName, logger }) => {
-  // Only initialize once per process
   if (initialized) {
     logger.info('[CacheResetListener] Already initialized, skipping');
     return;
   }
 
-  // Skip if Kafka is not configured or disabled
   if (!kafkaConfig || kafkaConfig.kafka_off === true) {
     logger.info('[CacheResetListener] Kafka not available or disabled, skipping');
     return;
@@ -40,20 +39,9 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
     return;
   }
 
-  // kafkajs is optional — service must have it installed
-  let Kafka;
-  try {
-    ({ Kafka } = require('kafkajs'));
-  } catch (e) {
-    if (e.code !== 'MODULE_NOT_FOUND') throw e;
-    logger.info('[CacheResetListener] kafkajs not installed, skipping');
-    return;
-  }
-
   let consumer = null;
   try {
-    // Each pod gets a unique group so every pod receives every message (fan-out)
-    const podId = process.env.HOSTNAME || require('crypto').randomBytes(8).toString('hex');
+    const podId = process.env.HOSTNAME || require('crypto').randomUUID();
     const groupId = `${TOPIC_NAME}-${serviceName}-${podId}`;
 
     const kafka = new Kafka({ clientId: `${TOPIC_NAME}-${serviceName}-${podId}`, brokers });
@@ -72,22 +60,18 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
       eachMessage: async ({ message }) => {
         try {
           if (message.value == null) return;
-
           const payload = JSON.parse(message.value.toString());
 
-          // Only accept messages from CaaS
           if (payload.source !== 'caas') {
             logger.warn(`[CacheResetListener] Ignoring message from: ${payload.source}`);
             return;
           }
 
-          // Reject old/replayed messages (or missing timestamp)
-          if (!Number.isFinite(payload.timestamp) || Math.abs(Date.now() - payload.timestamp) > REPLAY_WINDOW_MS) {
-            logger.warn(`[CacheResetListener] Rejecting message — invalid or stale timestamp`);
+          if (payload.timestamp && Math.abs(Date.now() - payload.timestamp) > REPLAY_WINDOW_MS) {
+            logger.warn('[CacheResetListener] Rejecting stale message');
             return;
           }
 
-          // Flush all caches
           const result = CacheRegistry.flushAll();
           logger.info(`[CacheResetListener] Cache flush complete: ${result.nodeCaches} caches, ${result.totalKeys} keys cleared`);
         } catch (error) {
@@ -99,7 +83,6 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
     initialized = true;
     logger.info(`[CacheResetListener] Listening on topic ${TOPIC_NAME} (groupId: ${groupId})`);
   } catch (error) {
-    // Clean up consumer on partial initialization failure
     if (consumer) {
       try { await consumer.disconnect(); } catch (e) { /* best effort */ }
     }
