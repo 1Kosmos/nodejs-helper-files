@@ -45,6 +45,7 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
   try {
     ({ Kafka } = require('kafkajs'));
   } catch (e) {
+    if (e.code !== 'MODULE_NOT_FOUND') throw e;
     logger.info('[CacheResetListener] kafkajs not installed, skipping');
     return;
   }

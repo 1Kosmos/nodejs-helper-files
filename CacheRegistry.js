@@ -34,6 +34,7 @@ try {
     nodeCacheEntry.exports = TrackedNodeCache;
   }
 } catch (e) {
+  if (e.code !== 'MODULE_NOT_FOUND') throw e;
   // node-cache not installed — flushAll() will be a no-op
 }
 
