@@ -13,27 +13,28 @@
  *     require('blockid-nodejs-helpers/CacheRegistry');
  *
  *   That's it. All caches created after this line are automatically tracked.
+ *   Safe no-op if node-cache is not installed.
  */
 
-// Step 1: Save the real NodeCache constructor
-const RealNodeCache = require('node-cache');
-
-// Step 2: Keep a list of all cache instances
 const allCaches = [];
 
-// Step 3: Create a wrapper that saves each new instance to the list
-function TrackedNodeCache(...args) {
-  const instance = new RealNodeCache(...args);
-  allCaches.push(instance);
-  return instance;
-}
-TrackedNodeCache.prototype = RealNodeCache.prototype;
+// Patch node-cache if available — safe no-op if not installed
+try {
+  const RealNodeCache = require('node-cache');
 
-// Step 4: Replace node-cache in Node's require system
-// After this, any file that does require('node-cache') gets TrackedNodeCache
-const nodeCacheEntry = require.cache[require.resolve('node-cache')];
-if (nodeCacheEntry) {
-  nodeCacheEntry.exports = TrackedNodeCache;
+  function TrackedNodeCache(...args) {
+    const instance = new RealNodeCache(...args);
+    allCaches.push(instance);
+    return instance;
+  }
+  TrackedNodeCache.prototype = RealNodeCache.prototype;
+
+  const nodeCacheEntry = require.cache[require.resolve('node-cache')];
+  if (nodeCacheEntry) {
+    nodeCacheEntry.exports = TrackedNodeCache;
+  }
+} catch (e) {
+  // node-cache not installed — flushAll() will be a no-op
 }
 
 /**
@@ -43,7 +44,6 @@ if (nodeCacheEntry) {
 const flushAll = () => {
   let totalKeys = 0;
 
-  // Clear every NodeCache instance (providers, WTM, BIDTenant, etc.)
   allCaches.forEach((cache) => {
     try {
       totalKeys += cache.keys().length;

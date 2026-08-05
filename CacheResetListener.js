@@ -17,7 +17,7 @@
 const CacheRegistry = require('./CacheRegistry');
 
 const TOPIC_NAME = 'platform_cache_reset';
-const REPLAY_WINDOW_MS = 30000; // reject messages older than 30 seconds
+const REPLAY_WINDOW_MS = 30000; // reject messages more than 30 seconds old or in the future
 
 let initialized = false;
 
@@ -45,7 +45,7 @@ const initialize = async ({ kafkaConfig, serviceName, logger }) => {
   try {
     ({ Kafka } = require('kafkajs'));
   } catch (e) {
-    logger.error('[CacheResetListener] kafkajs not installed, skipping');
+    logger.info('[CacheResetListener] kafkajs not installed, skipping');
     return;
   }
 
