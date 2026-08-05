@@ -1,40 +1,36 @@
 'use strict';
 
 /**
- * CacheResetListener — Kafka-based distributed cache flush for all 1Kosmos microservices.
+ * CacheResetListener — Listens for "flush your caches" signal on Kafka.
  *
- * Usage:
+ * HOW IT WORKS:
+ *   1. Connects to Kafka topic 'platform_cache_reset'
+ *   2. Each pod gets its own consumer group (so every pod receives every message)
+ *   3. When a message arrives from CaaS, calls CacheRegistry.flushAll()
+ *   4. All in-memory caches are cleared — next request fetches fresh data
+ *
+ * USAGE (in each service's CacheResetConsumer.js):
  *   const CacheResetListener = require('blockid-nodejs-helpers/CacheResetListener');
- *   CacheResetListener.initialize({ kafkaConfig, serviceName, logger });
- *
- * Options:
- *   - kafkaConfig: { brokers: string[], kafka_off?: boolean }
- *   - serviceName: e.g. 'adminapi', 'caas', 'users-mgmt' (used for groupId)
- *   - logger: Winston logger instance (must have .info, .warn, .error)
- *   - onFlush: optional callback invoked after caches are flushed (for service-specific cleanup)
+ *   await CacheResetListener.initialize({ kafkaConfig, serviceName, logger });
  */
 
 const CacheRegistry = require('./CacheRegistry');
 
 const TOPIC_NAME = 'platform_cache_reset';
-const REPLAY_WINDOW_MS = 30000;
+const REPLAY_WINDOW_MS = 30000; // reject messages older than 30 seconds
 
-let consumer = null;
 let initialized = false;
 
-const initialize = async ({ kafkaConfig, serviceName, logger, onFlush }) => {
+const initialize = async ({ kafkaConfig, serviceName, logger }) => {
+  // Only initialize once per process
   if (initialized) {
     logger.info('[CacheResetListener] Already initialized, skipping');
     return;
   }
 
-  if (!kafkaConfig) {
-    logger.info('[CacheResetListener] No kafkaConfig provided, skipping');
-    return;
-  }
-
-  if (kafkaConfig.kafka_off === true) {
-    logger.info('[CacheResetListener] Kafka is disabled (kafka_off), skipping');
+  // Skip if Kafka is not configured or disabled
+  if (!kafkaConfig || kafkaConfig.kafka_off === true) {
+    logger.info('[CacheResetListener] Kafka not available or disabled, skipping');
     return;
   }
 
@@ -44,30 +40,29 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush }) => {
     return;
   }
 
+  // kafkajs is optional — service must have it installed
   let Kafka;
   try {
     ({ Kafka } = require('kafkajs'));
   } catch (e) {
-    logger.error('[CacheResetListener] kafkajs not installed in this service, skipping');
+    logger.error('[CacheResetListener] kafkajs not installed, skipping');
     return;
   }
 
   try {
+    // Each pod gets a unique group so every pod receives every message (fan-out)
     const podId = process.env.HOSTNAME || require('crypto').randomUUID();
     const groupId = `${TOPIC_NAME}-${serviceName}-${podId}`;
 
-    const kafkaClient = new Kafka({
-      clientId: `client-${TOPIC_NAME}`,
-      brokers,
-    });
+    const kafka = new Kafka({ clientId: `client-${TOPIC_NAME}`, brokers });
+    const consumer = kafka.consumer({ groupId });
 
-    consumer = kafkaClient.consumer({ groupId });
     await consumer.connect();
     await consumer.subscribe({ topic: TOPIC_NAME, fromBeginning: false });
 
     consumer.on(consumer.events.CRASH, (event) => {
       if (!event.payload.restart) {
-        logger.error('[CacheResetListener] Consumer crashed and will not restart — cache flush disabled until service restart');
+        logger.error('[CacheResetListener] Consumer crashed — cache flush disabled until restart');
       }
     });
 
@@ -78,26 +73,21 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush }) => {
 
           const payload = JSON.parse(message.value.toString());
 
-          // Source validation
+          // Only accept messages from CaaS
           if (payload.source !== 'caas') {
-            logger.warn(`[CacheResetListener] Ignoring message from untrusted source: ${payload.source}`);
+            logger.warn(`[CacheResetListener] Ignoring message from: ${payload.source}`);
             return;
           }
 
-          // Replay protection
+          // Reject old/replayed messages
           if (payload.timestamp && Math.abs(Date.now() - payload.timestamp) > REPLAY_WINDOW_MS) {
             logger.warn(`[CacheResetListener] Rejecting stale message (age: ${Date.now() - payload.timestamp}ms)`);
             return;
           }
 
-          // Flush all caches (NodeCache instances + WTM)
+          // Flush all caches
           const result = CacheRegistry.flushAll();
-          logger.info(`[CacheResetListener] Cache flush complete: ${result.nodeCaches} caches, ${result.totalKeys} keys cleared, WTM: ${result.wtmKeys} keys`);
-
-          // Service-specific flush callback
-          if (onFlush && typeof onFlush === 'function') {
-            onFlush();
-          }
+          logger.info(`[CacheResetListener] Cache flush complete: ${result.nodeCaches} caches, ${result.totalKeys} keys cleared`);
         } catch (error) {
           logger.error(`[CacheResetListener] Error processing message: ${error.message}`);
         }
@@ -107,11 +97,6 @@ const initialize = async ({ kafkaConfig, serviceName, logger, onFlush }) => {
     initialized = true;
     logger.info(`[CacheResetListener] Listening on topic ${TOPIC_NAME} (groupId: ${groupId})`);
   } catch (error) {
-    // Clean up dangling consumer on partial failure
-    if (consumer) {
-      try { await consumer.disconnect(); } catch (e) { /* ignore */ }
-      consumer = null;
-    }
     logger.error(`[CacheResetListener] Initialization failed: ${error.message}`);
   }
 };
