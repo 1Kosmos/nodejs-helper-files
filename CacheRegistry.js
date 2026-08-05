@@ -46,7 +46,7 @@ const flushAll = () => {
 
   allCaches.forEach((cache) => {
     try {
-      totalKeys += (cache.getStats && cache.getStats().keys) || cache.keys().length;
+      totalKeys += (typeof cache.getStats === 'function' ? cache.getStats().keys : cache.keys().length) ?? 0;
       cache.flushAll();
     } catch (e) { /* skip — cache instance may be in a bad state */ }
   });
