@@ -85,6 +85,12 @@ const executeRequest = async (object) => {
         request.timeout = object.timeout;
     }
 
+    // Support AbortController signal for request cancellation.
+    // Caller passes { signal: abortController.signal } to allow aborting the request externally.
+    if (object.signal) {
+        request.signal = object.signal;
+    }
+
     /**
      * Added host mapping support for multi-site hosting
      */
