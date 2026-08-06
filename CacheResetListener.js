@@ -4,7 +4,7 @@
  * CacheResetListener — Listens for "flush your caches" signal on Kafka.
  *
  * HOW IT WORKS:
- *   1. Connects to Kafka topic 'platform_cache_reset'
+ *   1. Connects to Kafka topic 'platform-cache-reset'
  *   2. Each pod gets its own consumer group (so every pod receives every message)
  *   3. When a message arrives from CaaS, calls CacheRegistry.flushAll()
  *   4. All in-memory caches are cleared — next request fetches fresh data
@@ -16,7 +16,7 @@
 
 const CacheRegistry = require('./CacheRegistry');
 
-const TOPIC_NAME = 'platform_cache_reset';
+const TOPIC_NAME = 'platform-cache-reset';
 const REPLAY_WINDOW_MS = 30000;
 
 let initialized = false;
