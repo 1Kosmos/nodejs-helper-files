@@ -31,6 +31,11 @@ request object
     url
     headers: {k:v}
     body: json
+    rawBody: optional — a pre-built request body sent VERBATIM (no JSON.stringify), e.g. a form-data
+             stream, Buffer, or string. Takes precedence over body/urlSearchParams when present. If it
+             exposes getHeaders() (form-data), those headers are merged in without overriding caller headers.
+    responseType: optional — 'buffer' to return the raw response body as a Buffer on ret.buffer (binary
+             downloads); omit for the default ret.text + best-effort ret.json.
     cacheKey: string / optional
     ttl: seconds
     keepAlive: boolean / optional
@@ -67,7 +72,19 @@ const executeRequest = async (object) => {
     if (object.headers) {
         request.headers = object.headers;
     }
-    if (object.body) {
+    // Body selection (first match wins):
+    //  - rawBody: send a pre-built body VERBATIM (no JSON.stringify) — e.g. a form-data stream, Buffer,
+    //    or string. Opt-in only; when absent the existing body/urlSearchParams behavior is unchanged.
+    //    If rawBody exposes getHeaders() (form-data), its part headers (multipart Content-Type with the
+    //    generated boundary) are merged in WITHOUT overriding any header the caller set explicitly.
+    //  - body: legacy JSON path — JSON.stringify as before.
+    //  - urlSearchParams: legacy form-urlencoded path.
+    if (object.rawBody !== undefined && object.rawBody !== null) {
+        request.body = object.rawBody;
+        if (typeof object.rawBody.getHeaders === 'function') {
+            request.headers = { ...object.rawBody.getHeaders(), ...(request.headers || {}) };
+        }
+    } else if (object.body) {
         request.body = JSON.stringify(object.body);
     } else if (object.urlSearchParams) {
         request.body = object.urlSearchParams
@@ -128,13 +145,22 @@ const executeRequest = async (object) => {
     let api_response = await fetch(object.url, request);
     if (api_response) {
         ret.status = api_response.status;
-        ret.text = await api_response.text();
-        try {
-            ret.json = JSON.parse(ret.text);
-        } catch (error) {
-            //ret.error = error; //MK: SEP/2 this is not supposed to be an error
-            if (logger) {
-                logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
+        // Response reading:
+        //  - responseType === 'buffer': return the raw body as a Buffer on ret.buffer (e.g. image/binary
+        //    downloads). Opt-in only; text/json are NOT read in this mode. When absent, the existing
+        //    text + best-effort JSON parse behavior is byte-for-byte unchanged.
+        //  - default: ret.text (always) + ret.json (best-effort parse, unchanged).
+        if (object.responseType === 'buffer') {
+            ret.buffer = Buffer.from(await api_response.arrayBuffer());
+        } else {
+            ret.text = await api_response.text();
+            try {
+                ret.json = JSON.parse(ret.text);
+            } catch (error) {
+                //ret.error = error; //MK: SEP/2 this is not supposed to be an error
+                if (logger) {
+                    logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${ret.error}`);
+                }
             }
         }
     }
@@ -145,7 +171,9 @@ const executeRequest = async (object) => {
         httpStatus.INTERNAL_SERVER_ERROR
     ]
     if (responseStatus.includes(ret.status) && logger) {
-        logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${ret.text}`);
+        // In buffer mode there is no ret.text; log a size note instead of dumping/garbling raw bytes.
+        const errBody = object.responseType === 'buffer' ? `<binary ${ret.buffer ? ret.buffer.length : 0} bytes>` : ret.text;
+        logger.info(`WTM ${object.method} called to URL:${object.url} with requestId: ${object.requestID ? JSON.stringify(object.requestID) : 'n/a'} resulted in ${ret.status} with body: ${errBody}`);
     }
 
     if (object.cacheKey && ret.status == httpStatus.OK) {
